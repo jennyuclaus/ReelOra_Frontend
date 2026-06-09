@@ -53,6 +53,20 @@ window.addEventListener('load', () => {
   // Start auf Filme → Entdecken
   showFilmeTab('entdecken', document.getElementById('ftab-entdecken'));
   renderLibrary(); renderWatchlists();
+
+  // ─── Autocomplete Event Listeners ────────────────────────
+  // Film-Suche
+  const filmInput = document.getElementById('search-input');
+  if (filmInput) {
+    filmInput.addEventListener('input', e => autocomplete(e.target.value, 'movie'));
+    filmInput.addEventListener('keydown', e => handleAutoKey(e, 'movie'));
+  }
+  // Serien-Suche
+  const seriesInput = document.getElementById('series-search-input');
+  if (seriesInput) {
+    seriesInput.addEventListener('input', e => autocomplete(e.target.value, 'tv'));
+    seriesInput.addEventListener('keydown', e => handleAutoKey(e, 'tv'));
+  }
 });
 
 function save() {
