@@ -18,81 +18,133 @@
     REELORA
   </div>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showPage('entdecken',this)">Entdecken</button>
-    <button class="nav-tab" onclick="showPage('bibliothek',this)">Filme</button>
+    <button class="nav-tab active" onclick="showFilmePage('entdecken',this)">Entdecken</button>
+    <button class="nav-tab" onclick="showFilmePage('archiv',this)">Filme</button>
     <button class="nav-tab" onclick="showPage('serien',this)">Serien</button>
-    <button class="nav-tab" onclick="showPage('watchlist',this)">Watchlisten</button>
-    <button class="nav-tab" onclick="showPage('statistiken',this)">Statistiken</button>
+    <button class="nav-tab" onclick="showFilmePage('watchlist',this)">Watchlisten</button>
+    <button class="nav-tab" onclick="showFilmePage('statistiken',this)">Statistiken</button>
     <button class="nav-tab" onclick="showPage('import',this)">Kodi Import</button>
     <button class="nav-tab" onclick="showPage('einstellungen',this)">Einstellungen</button>
   </div>
   <div class="topbar-right">
-    <div id="drive-indicator" class="icon-btn" title="Google Drive" onclick="showPage('einstellungen',document.querySelectorAll('.nav-tab')[6])">☁</div>
+    <div id="drive-indicator" class="icon-btn" title="Google Drive" onclick="showPage('einstellungen',document.querySelectorAll('.nav-tab')[4])">☁</div>
     <div class="icon-btn" id="user-avatar">👤</div>
   </div>
 </div>
 
-<!-- ENTDECKEN -->
-<div id="page-entdecken" class="page active">
-  <div class="search-bar">
-    <input class="search-input" id="search-input" placeholder="Film oder Serie suchen..." onkeydown="if(event.key==='Enter')searchMovies()">
-    <button class="btn-gold" onclick="searchMovies()">SUCHEN</button>
-  </div>
-  <div class="filter-row" id="filter-row">
-    <button class="filter-btn active" onclick="setFilter('all',this)">Alle</button>
-    <button class="filter-btn" onclick="setFilter('action',this)">Action</button>
-    <button class="filter-btn" onclick="setFilter('drama',this)">Drama</button>
-    <button class="filter-btn" onclick="setFilter('scifi',this)">Sci-Fi</button>
-    <button class="filter-btn" onclick="setFilter('thriller',this)">Thriller</button>
-    <button class="filter-btn" onclick="setFilter('horror',this)">Horror</button>
-    <button class="filter-btn" onclick="setFilter('animation',this)">Animation</button>
-  </div>
-  <div class="search-loading" id="search-loading"><div class="spinner"></div> Suche in TMDB...</div>
-  <div id="search-results-section" style="display:none">
-    <div class="section-title" id="search-results-title">SUCHERGEBNISSE</div>
-    <div class="movie-grid" id="search-results"></div>
-    <div class="divider"></div>
-  </div>
-  <div class="section-title">EMPFOHLEN FÜR DICH</div>
-  <div class="movie-grid" id="trending-grid"></div>
-  <div class="section-title" style="margin-top:32px">ZULETZT ARCHIVIERT</div>
-  <div class="movie-grid" id="recent-archive-grid"></div>
-</div>
+
 
 <!-- FILME (Bibliothek) -->
-<div id="page-bibliothek" class="page">
-  <div class="library-controls">
-    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-      <div class="view-toggle">
-        <button class="vt-btn active" id="view-grid-btn" onclick="setLibView('grid')">⊞ Raster</button>
-        <button class="vt-btn" id="view-list-btn" onclick="setLibView('list')">☰ Liste</button>
+<div id="page-bibliothek" class="page active">
+  <!-- Sub-Navigation wie bei Serien -->
+  <div style="display:flex;gap:4px;margin-bottom:24px;border-bottom:1px solid var(--border);padding-bottom:0">
+    <button class="tab-sec active" id="ftab-entdecken" onclick="showFilmeTab('entdecken',this)">Entdecken</button>
+    <button class="tab-sec" id="ftab-archiv" onclick="showFilmeTab('archiv',this)">Mein Archiv</button>
+    <button class="tab-sec" id="ftab-watchlist" onclick="showFilmeTab('watchlist',this)">Watchlist</button>
+    <button class="tab-sec" id="ftab-statistiken" onclick="showFilmeTab('statistiken',this)">Statistiken</button>
+  </div>
+
+  <!-- ENTDECKEN TAB -->
+  <div id="filme-tab-entdecken">
+    <div class="search-bar">
+      <input class="search-input" id="search-input" placeholder="Film suchen..." onkeydown="if(event.key==='Enter')searchMovies()">
+      <button class="btn-gold" onclick="searchMovies()">SUCHEN</button>
+    </div>
+    <div class="filter-row" id="filter-row">
+      <button class="filter-btn active" onclick="setFilter('all',this)">Alle</button>
+      <button class="filter-btn" onclick="setFilter('action',this)">Action</button>
+      <button class="filter-btn" onclick="setFilter('drama',this)">Drama</button>
+      <button class="filter-btn" onclick="setFilter('scifi',this)">Sci-Fi</button>
+      <button class="filter-btn" onclick="setFilter('thriller',this)">Thriller</button>
+      <button class="filter-btn" onclick="setFilter('horror',this)">Horror</button>
+      <button class="filter-btn" onclick="setFilter('animation',this)">Animation</button>
+    </div>
+    <div class="search-loading" id="search-loading"><div class="spinner"></div> Suche in TMDB...</div>
+    <div id="search-results-section" style="display:none">
+      <div class="section-title" id="search-results-title">SUCHERGEBNISSE</div>
+      <div class="movie-grid" id="search-results"></div>
+      <div class="divider"></div>
+    </div>
+    <div class="section-title">EMPFOHLEN FÜR DICH</div>
+    <div class="movie-grid" id="trending-grid"></div>
+    <div class="section-title" style="margin-top:32px">ZULETZT ARCHIVIERT</div>
+    <div class="movie-grid" id="recent-archive-grid"></div>
+  </div>
+
+  <!-- ARCHIV TAB -->
+  <div id="filme-tab-archiv" style="display:none">
+    <div class="library-controls">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div class="view-toggle">
+          <button class="vt-btn active" id="view-grid-btn" onclick="setLibView('grid')">⊞ Raster</button>
+          <button class="vt-btn" id="view-list-btn" onclick="setLibView('list')">☰ Liste</button>
+        </div>
+        <select id="sort-select" onchange="renderLibrary()">
+          <option value="added">Nach Hinzugefügt</option>
+          <option value="rating">Nach Bewertung</option>
+          <option value="year">Nach Jahr</option>
+          <option value="title">Nach Titel</option>
+        </select>
+        <input class="search-input" id="lib-search" placeholder="Archiv durchsuchen..." style="width:200px" oninput="renderLibrary()">
       </div>
-      <select id="sort-select" onchange="renderLibrary()">
-        <option value="added">Nach Hinzugefügt</option>
-        <option value="rating">Nach Bewertung</option>
-        <option value="year">Nach Jahr</option>
-        <option value="title">Nach Titel</option>
-      </select>
-      <input class="search-input" id="lib-search" placeholder="Filme durchsuchen..." style="width:220px" oninput="renderLibrary()">
+      <div style="display:flex;gap:8px">
+        <button class="btn-outline" id="delete-mode-btn" onclick="toggleDeleteMode()">🗑 Auswählen</button>
+        <button class="btn-outline" onclick="exportLibrary()">↓ Export</button>
+      </div>
     </div>
-    <div style="display:flex;gap:8px">
-      <button class="btn-outline" id="delete-mode-btn" onclick="toggleDeleteMode()">🗑 Auswählen</button>
-      <button class="btn-outline" onclick="exportLibrary()">↓ Export</button>
+    <div id="bulk-delete-bar" style="display:none;align-items:center;justify-content:space-between;background:rgba(224,82,82,0.08);border:1px solid rgba(224,82,82,0.3);border-radius:10px;padding:12px 16px;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span id="bulk-delete-label" style="font-size:13px;color:var(--text2)">Filme zum Löschen auswählen</span>
+        <button id="select-all-btn" onclick="selectAllFilms()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:'Jost',sans-serif;font-size:12px;cursor:pointer">Alle auswählen</button>
+      </div>
+      <button id="bulk-delete-confirm-btn" onclick="bulkDeleteSelected()" style="display:none;padding:8px 20px;border-radius:8px;border:1px solid var(--red);background:rgba(224,82,82,0.15);color:var(--red);font-family:'Cinzel',serif;font-size:12px;letter-spacing:1px;cursor:pointer;font-weight:600">AUSGEWÄHLTE LÖSCHEN</button>
+    </div>
+    <div class="filter-row" id="lib-filter-row">
+      <button class="filter-btn active" onclick="setLibFilter('all',this)">Alle</button>
+      <button class="filter-btn" onclick="setLibFilter('gesehen',this)">Bewertet</button>
+      <button class="filter-btn" onclick="setLibFilter('favoriten',this)">Favoriten ★</button>
+    </div>
+    <div id="library-container"></div>
+  </div>
+
+  <!-- WATCHLIST TAB -->
+  <div id="filme-tab-watchlist" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div class="section-title" style="margin:0">MEINE LISTEN</div>
+      <button class="btn-outline" onclick="toggleNewListForm()">+ Neue Liste</button>
+    </div>
+    <div class="new-list-form" id="new-list-form">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:8px">Listenname</div>
+      <div class="form-row">
+        <input class="search-input" id="new-list-name" placeholder="z.B. Must-Watch 2024...">
+        <button class="btn-gold" onclick="createNewList()">Erstellen</button>
+      </div>
+    </div>
+    <div id="watchlist-container"></div>
+  </div>
+
+  <!-- STATISTIKEN TAB -->
+  <div id="filme-tab-statistiken" style="display:none">
+    <div class="stats-grid" id="filme-stats-cards"></div>
+    <div class="two-col">
+      <div class="chart-area">
+        <div class="chart-title">Filme pro Monat</div>
+        <div class="bar-chart" id="monthly-chart"></div>
+      </div>
+      <div class="chart-area">
+        <div class="chart-title">Lieblingsgenres</div>
+        <div class="genre-list" id="genre-chart"></div>
+      </div>
+    </div>
+    <div class="chart-area" style="margin-top:16px">
+      <div class="chart-title">Archivierte Filme nach Jahrzehnt</div>
+      <div class="bar-chart" id="decade-chart"></div>
+    </div>
+    <div style="margin-top:24px">
+      <div class="section-title">TOP BEWERTUNGEN</div>
+      <div id="top-rated-list"></div>
     </div>
   </div>
-  <div id="bulk-delete-bar" style="display:none;align-items:center;justify-content:space-between;background:rgba(224,82,82,0.08);border:1px solid rgba(224,82,82,0.3);border-radius:10px;padding:12px 16px;margin-bottom:16px;flex-wrap:wrap;gap:10px">
-    <div style="display:flex;align-items:center;gap:12px">
-      <span id="bulk-delete-label" style="font-size:13px;color:var(--text2)">Filme zum Löschen auswählen</span>
-      <button id="select-all-btn" onclick="selectAllFilms()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:'Jost',sans-serif;font-size:12px;cursor:pointer">Alle auswählen</button>
-    </div>
-    <button id="bulk-delete-confirm-btn" onclick="bulkDeleteSelected()" style="display:none;padding:8px 20px;border-radius:8px;border:1px solid var(--red);background:rgba(224,82,82,0.15);color:var(--red);font-family:'Cinzel',serif;font-size:12px;letter-spacing:1px;cursor:pointer;font-weight:600">AUSGEWÄHLTE LÖSCHEN</button>
-  </div>
-  <div class="filter-row" id="lib-filter-row">
-    <button class="filter-btn active" onclick="setLibFilter('all',this)">Alle</button>
-    <button class="filter-btn" onclick="setLibFilter('gesehen',this)">Bewertet</button>
-    <button class="filter-btn" onclick="setLibFilter('favoriten',this)">Favoriten ★</button>
-  </div>
-  <div id="library-container"></div>
 </div>
 
 <!-- SERIEN -->
