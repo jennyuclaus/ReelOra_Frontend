@@ -878,16 +878,6 @@ function autocomplete(q, type) {
 async function doAutocomplete(q, type, input) {
   if (!settings.tmdb_key || !input) return;
 
-  // Backdrop – alles darunter abdecken
-  let backdrop = document.getElementById('autocomplete-backdrop');
-  if (!backdrop) {
-    backdrop = document.createElement('div');
-    backdrop.id = 'autocomplete-backdrop';
-    backdrop.style.cssText = 'position:fixed;inset:0;z-index:9997;background:transparent';
-    backdrop.onclick = () => { closeAutocomplete('movie'); closeAutocomplete('tv'); };
-    document.body.appendChild(backdrop);
-  }
-  backdrop.style.display = 'block';
   document.body.classList.add('autocomplete-open');
 
   // Dropdown am body
@@ -1016,8 +1006,6 @@ function closeAutocomplete(type) {
   const other = type === 'movie' ? 'tv' : 'movie';
   const otherDrop = document.getElementById('autocomplete-' + other);
   if (!otherDrop || otherDrop.style.display === 'none') {
-    const backdrop = document.getElementById('autocomplete-backdrop');
-    if (backdrop) backdrop.style.display = 'none';
     document.body.classList.remove('autocomplete-open');
   }
   autoIndex   = -1;
@@ -1032,6 +1020,11 @@ document.addEventListener('click', e => {
     closeAutocomplete('movie');
     closeAutocomplete('tv');
   }
+});
+
+// Escape schließt Dropdown
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeAutocomplete('movie'); closeAutocomplete('tv'); }
 });
 
 // ─── TOAST ───────────────────────────────────────────────────
