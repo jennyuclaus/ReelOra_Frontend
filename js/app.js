@@ -826,6 +826,24 @@ function getApiBase() {
   return (settings.vercel_url || '').replace(/\/$/, '');
 }
 
+function getDriveToken() {
+  try {
+    const stored = localStorage.getItem('reelora_drive_token');
+    if (!stored) return null;
+    const data = JSON.parse(stored);
+    // Token abgelaufen?
+    if (data.expires_at && data.expires_at < Date.now()) return null;
+    return data.access_token || null;
+  } catch { return null; }
+}
+
+function driveHeaders() {
+  const token = getDriveToken();
+  const h = { 'Content-Type': 'application/json' };
+  if (token) h['Authorization'] = 'Bearer ' + token;
+  return h;
+}
+
 function connectGoogleDrive() {
   const api = getApiBase();
   if (!api) {
@@ -848,7 +866,10 @@ async function checkDriveStatus() {
   const api = getApiBase();
   if (!api) return false;
   try {
-    const res  = await fetch(api + '/api/auth/status', { credentials: 'include' });
+    const res  = await fetch(api + '/api/auth/status', {
+      credentials: 'include',
+      headers: driveHeaders(),
+    });
     const data = await res.json();
     if (data.connected && !data.expired) {
       settings.drive_connected = true;
@@ -864,7 +885,10 @@ async function loadFromDrive() {
   const api = getApiBase();
   if (!api || !settings.drive_connected) return;
   try {
-    const res  = await fetch(api + '/api/drive/sync', { credentials: 'include' });
+    const res  = await fetch(api + '/api/drive/sync', {
+      credentials: 'include',
+      headers: driveHeaders(),
+    });
     if (res.status === 401) {
       toast('\u26a0 Drive: Bitte neu anmelden', 'warn');
       settings.drive_connected = false; save(); updateDriveUI(); return;
