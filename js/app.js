@@ -689,18 +689,24 @@ async function driveSync() {
 async function manualSync() { if(!settings.drive_connected){toast('⚠ Nicht verbunden','warn');return;} await driveSync(); }
 
 function updateDriveUI() {
-  const badge=document.getElementById('drive-status-badge'),btn=document.getElementById('drive-connect-btn'),indicator=document.getElementById('drive-indicator'),syncRow=document.getElementById('drive-sync-row'),manualRow=document.getElementById('drive-manual-row'),sub=document.getElementById('drive-account-sub');
+  const badge=document.getElementById('drive-status-badge'),btn=document.getElementById('drive-connect-btn'),syncRow=document.getElementById('drive-sync-row'),manualRow=document.getElementById('drive-manual-row'),sub=document.getElementById('drive-account-sub');
+  const logo=document.getElementById('user-avatar');
   if(!badge) return;
   if(settings.drive_connected){
     badge.className='drive-status connected'; badge.innerHTML='<div class="dot green"></div>Verbunden';
-    btn.textContent='Trennen'; btn.onclick=disconnectDrive; indicator.style.color='var(--green)';
+    btn.textContent='Trennen'; btn.onclick=disconnectDrive;
     if(syncRow) syncRow.style.display='flex'; if(manualRow) manualRow.style.display='flex';
     if(sub) sub.textContent=settings.drive_account||'Verbunden';
+    // Logo: grüner Ring wenn verbunden
+    if(logo) logo.style.outline='2px solid var(--green)';
+    if(logo) logo.title='Drive verbunden: '+(settings.drive_account||'');
   } else {
     badge.className='drive-status disconnected'; badge.innerHTML='<div class="dot gray"></div>Nicht verbunden';
-    btn.textContent='Mit Google anmelden'; btn.onclick=connectGoogleDrive; indicator.style.color='var(--text3)';
+    btn.textContent='Mit Google anmelden'; btn.onclick=connectGoogleDrive;
     if(syncRow) syncRow.style.display='none'; if(manualRow) manualRow.style.display='none';
     if(sub) sub.textContent='Nicht verbunden';
+    if(logo) logo.style.outline='none';
+    if(logo) logo.title='Einstellungen';
   }
 }
 
