@@ -448,9 +448,10 @@ select{
   border:1px solid rgba(201,168,76,0.4);
   border-top:2px solid rgba(201,168,76,0.2);
   border-radius:0 0 14px 14px;
-  z-index:99999 !important;
+  z-index:99998 !important;
   overflow-y:auto !important;
   overflow-x:hidden;
+  pointer-events:all !important;
   height:auto;
   max-height:400px;
   box-shadow:0 8px 40px rgba(0,0,0,0.98);
