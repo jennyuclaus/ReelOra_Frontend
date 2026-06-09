@@ -204,8 +204,8 @@ function renderMovieGrid(containerId, movies) {
     return `<div class="movie-card" onclick="openMovieDetail('${b64}')">
       <div class="movie-poster">${poster}
         <div class="movie-actions">
-          <button class="action-btn" onclick="event.stopPropagation();quickArchive(${id},'${esc(title)}')">${archived?'✓':'+'}</button>
-          <button class="action-btn" onclick="event.stopPropagation();addToWatchlistById(${id},'${esc(title)}','${m.poster_path||''}','${year}')">🔖</button>
+          <button class="action-btn" onclick="event.stopPropagation();quickArchive(${id},'${esc(title)}')" title="Archivieren">${archived?'✓':'+'}</button>
+          <button class="action-btn" onclick="event.stopPropagation();showWatchlistPicker(${id},'${esc(title)}','${m.poster_path||''}','${year}')" title="Zur Liste hinzufügen">🔖</button>
         </div>
         ${archived ? '<div class="badge-archived">✓ Archiviert</div>' : ''}
       </div>
@@ -433,17 +433,12 @@ function showDeleteConfirm(title, subtitle, onConfirm) {
 
 // ─── WATCHLIST ───────────────────────────────────────────────
 function addToWatchlistById(id, title, posterPath='', year='') {
-  if (!watchlists.length) { toast('Keine Watchlist – bitte zuerst eine erstellen'); return; }
+  // Bereits archiviert?
+  if (library.some(l => l.tmdb_id === id)) { toast('"'+title+'" ist bereits im Archiv'); return; }
   // Bereits in einer Watchlist?
   const alreadyIn = watchlists.filter(wl => wl.items.some(i => i.id === id));
   if (alreadyIn.length) { toast('"'+title+'" ist bereits in: '+alreadyIn.map(w=>w.name).join(', ')); return; }
-  // Nur eine Liste → direkt hinzufügen
-  if (watchlists.length === 1) {
-    watchlists[0].items.push({id, title, added:Date.now(), done:false, poster_path:posterPath, year, rating:0});
-    save(); toast('🔖 "'+title+'" → '+watchlists[0].name); renderWatchlists(); renderDiscoverGrid(); renderSearchResults();
-    return;
-  }
-  // Mehrere Listen → Auswahl zeigen
+  // Immer Picker zeigen (mit Archivieren-Option)
   showWatchlistPicker(id, title, posterPath, year);
 }
 
@@ -452,22 +447,34 @@ function showWatchlistPicker(id, title, posterPath, year) {
   const overlay = document.createElement('div');
   overlay.id = 'watchlist-picker-dialog';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:400;display:flex;align-items:center;justify-content:center;padding:20px';
+  const listButtons = watchlists.map(wl => `
+    <button onclick="addToList(${id},'${esc(title)}','${posterPath}','${year}',${wl.id})"
+      style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Jost',sans-serif;font-size:14px;cursor:pointer;text-align:left;width:100%"
+      onmouseover="this.style.borderColor='var(--gold-dim)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="display:flex;align-items:center;gap:10px"><span>🔖</span><span>${esc(wl.name)}</span></div>
+      <span style="font-size:12px;color:var(--text2)">${wl.items.length} Filme</span>
+    </button>`).join('');
   overlay.innerHTML = `
     <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:24px;max-width:380px;width:100%">
-      <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold);letter-spacing:2px;margin-bottom:6px">ZUR WATCHLIST HINZUFÜGEN</div>
+      <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold);letter-spacing:2px;margin-bottom:6px">WAS MÖCHTEST DU TUN?</div>
       <div style="font-size:13px;color:var(--text2);margin-bottom:16px">${esc(title)}</div>
-      <div style="display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto">
-        ${watchlists.map(wl => `
-          <button onclick="addToList(${id},'${esc(title)}','${posterPath}','${year}',${wl.id})" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Jost',sans-serif;font-size:14px;cursor:pointer;text-align:left;transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--gold-dim)'" onmouseout="this.style.borderColor='var(--border)'">
-            <span>${esc(wl.name)}</span>
-            <span style="font-size:12px;color:var(--text2)">${wl.items.length} Filme</span>
-          </button>`).join('')}
+      <div style="display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto">
+        <button onclick="quickArchive(${id},'${esc(title)}');document.getElementById('watchlist-picker-dialog').remove()"
+          style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.4);border-radius:10px;color:var(--gold);font-family:'Jost',sans-serif;font-size:14px;cursor:pointer;text-align:left;width:100%">
+          <span style="font-size:20px">🎬</span>
+          <div><div style="font-weight:600">Zu Mein Archiv hinzufügen</div><div style="font-size:11px;opacity:0.7">Film direkt archivieren</div></div>
+        </button>
+        ${listButtons}
       </div>
-      <button onclick="document.getElementById('watchlist-picker-dialog').remove()" style="margin-top:14px;width:100%;padding:10px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:'Jost',sans-serif;font-size:13px;cursor:pointer">Abbrechen</button>
+      <button onclick="document.getElementById('watchlist-picker-dialog').remove()"
+        style="margin-top:14px;width:100%;padding:10px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:'Jost',sans-serif;font-size:13px;cursor:pointer">
+        Abbrechen
+      </button>
     </div>`;
   document.body.appendChild(overlay);
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
 }
+
 
 function addToList(id, title, posterPath, year, listId) {
   document.getElementById('watchlist-picker-dialog')?.remove();
