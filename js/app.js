@@ -883,7 +883,7 @@ async function doAutocomplete(q, type, input) {
   if (!backdrop) {
     backdrop = document.createElement('div');
     backdrop.id = 'autocomplete-backdrop';
-    backdrop.style.cssText = 'position:fixed;inset:0;z-index:9998;background:transparent';
+    backdrop.style.cssText = 'position:fixed;inset:0;z-index:9997;background:transparent';
     backdrop.onclick = () => { closeAutocomplete('movie'); closeAutocomplete('tv'); };
     document.body.appendChild(backdrop);
   }
