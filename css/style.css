@@ -439,10 +439,9 @@ select{
 
 /* ===== AUTOCOMPLETE ===== */
 .autocomplete-dropdown {
-  position:absolute;top:calc(100% + 6px);left:0;right:0;
   background:var(--bg2);border:1px solid var(--border2);
-  border-radius:12px;z-index:200;overflow:hidden;
-  box-shadow:0 8px 32px rgba(0,0,0,0.5);
+  border-radius:12px;z-index:9999;overflow:hidden;
+  box-shadow:0 8px 32px rgba(0,0,0,0.6);
   max-height:360px;overflow-y:auto;
 }
 .autocomplete-item {
