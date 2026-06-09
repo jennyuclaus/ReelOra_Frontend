@@ -851,20 +851,36 @@ let autoIndex   = -1;
 let autoResults = [];
 
 async function autocomplete(q, type) {
-  const dropId = 'autocomplete-' + type;
-  const drop   = document.getElementById(dropId);
-  if (!drop) return;
-
+  const inputId = type === 'movie' ? 'search-input' : 'series-search-input';
+  const input   = document.getElementById(inputId);
   clearTimeout(autoTimer);
   autoIndex = -1;
 
-  if (q.length < 2) { drop.style.display = 'none'; return; }
+  if (q.length < 2) { closeAutocomplete(type); return; }
 
-  // Debounce 300ms
   autoTimer = setTimeout(async () => {
     if (!settings.tmdb_key) return;
+    if (!input) return;
 
-    drop.style.display = 'block';
+    // Dropdown direkt am body anhängen – kein Clipping durch Parent
+    let drop = document.getElementById('autocomplete-' + type);
+    if (!drop) {
+      drop = document.createElement('div');
+      drop.id = 'autocomplete-' + type;
+      drop.className = 'autocomplete-dropdown';
+      document.body.appendChild(drop);
+    }
+
+    // Position berechnen relativ zum Input
+    const rect = input.getBoundingClientRect();
+    drop.style.cssText = `
+      position:fixed;
+      top:${rect.bottom + 6}px;
+      left:${rect.left}px;
+      width:${rect.width}px;
+      z-index:9999;
+      display:block;
+    `;
     drop.innerHTML = '<div class="autocomplete-loading"><div class="spinner"></div> Suche...</div>';
 
     const endpoint = type === 'movie' ? '/search/movie' : '/search/tv';
@@ -876,13 +892,14 @@ async function autocomplete(q, type) {
     }
 
     autoResults = data.results.slice(0, 8);
-    renderAutocomplete(type, autoResults);
+    renderAutocomplete(type, autoResults, rect);
   }, 300);
 }
 
-function renderAutocomplete(type, results) {
-  const drop  = document.getElementById('autocomplete-' + type);
-  if (!drop) return;
+function renderAutocomplete(type, results, rect) {
+  let drop = document.getElementById('autocomplete-' + type);
+  if (!drop) { drop = document.createElement('div'); drop.id='autocomplete-'+type; drop.className='autocomplete-dropdown'; document.body.appendChild(drop); }
+  if (rect) { drop.style.top=rect.bottom+6+'px'; drop.style.left=rect.left+'px'; drop.style.width=rect.width+'px'; }
 
   drop.innerHTML = results.map((m, i) => {
     const title  = m.title || m.name || '';
@@ -962,7 +979,7 @@ function updateAutoHighlight(type) {
 
 function closeAutocomplete(type) {
   const drop = document.getElementById('autocomplete-' + type);
-  if (drop) drop.style.display = 'none';
+  if (drop) { drop.style.display = 'none'; drop.innerHTML = ''; }
   autoIndex   = -1;
   autoResults = [];
 }

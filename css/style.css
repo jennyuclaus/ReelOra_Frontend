@@ -45,11 +45,11 @@ body{
 .icon-btn:hover{color:var(--gold);border-color:var(--gold-dim);}
 
 /* ===== PAGES ===== */
-.page{display:none;padding:24px;max-width:1400px;margin:0 auto;}
+.page{display:none;padding:24px;max-width:1400px;margin:0 auto;overflow:visible;}
 .page.active{display:block;}
 
 /* ===== COMMON ===== */
-.search-bar{display:flex;gap:12px;margin-bottom:28px;}
+.search-bar{display:flex;gap:12px;margin-bottom:28px;position:relative;overflow:visible;}
 .search-input{
   flex:1;padding:12px 18px;background:var(--bg3);border:1px solid var(--border2);
   border-radius:10px;color:var(--text);font-family:'Jost',sans-serif;font-size:15px;
