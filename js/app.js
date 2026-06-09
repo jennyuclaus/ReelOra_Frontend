@@ -424,7 +424,29 @@ function renderWatchlists() {
       </div>
       <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:0 16px">
         ${!wl.items.length ? '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">Noch keine Filme</div>' : ''}
-        ${wl.items.map((item,i) => `<div class="wl-item"><div class="wl-num">${i+1}</div><div class="wl-poster">${item.poster_path?`<img src="${IMG_BASE}${item.poster_path}" loading="lazy">`:'🎬'}</div><div class="wl-info"><div class="wl-title">${esc(item.title)}</div></div><button class="wl-check ${item.done?'done':''}" onclick="toggleWLItem(${wl.id},${item.id})">${item.done?'✓':'○'}</button><button class="action-btn" onclick="removeFromWL(${wl.id},${item.id})" style="color:var(--red)">✕</button></div>`).join('')}
+        ${wl.items.map((item,i) => {
+          // Film-Daten aus Bibliothek holen falls vorhanden
+          const libEntry = library.find(l => l.tmdb_id === item.id);
+          const b64 = encodeMovie({
+            id:           item.id,
+            title:        item.title,
+            year:         libEntry?.year        || item.year        || '',
+            poster_path:  libEntry?.poster_path || item.poster_path || '',
+            vote_average: (libEntry?.rating||0) * 2,
+            overview:     libEntry?.overview    || '',
+            genres:       libEntry?.genres?.map(g=>({name:g})) || []
+          });
+          return `<div class="wl-item" style="cursor:pointer" onclick="openMovieDetail('${b64}')">
+            <div class="wl-num">${i+1}</div>
+            <div class="wl-poster">${(libEntry?.poster_path||item.poster_path)?`<img src="${IMG_BASE}${libEntry?.poster_path||item.poster_path}" loading="lazy">`:'🎬'}</div>
+            <div class="wl-info">
+              <div class="wl-title">${esc(item.title)}</div>
+              ${libEntry?.year||item.year ? `<div class="wl-meta">${libEntry?.year||item.year}</div>` : ''}
+            </div>
+            <button class="wl-check ${item.done?'done':''}" onclick="event.stopPropagation();toggleWLItem(${wl.id},${item.id})">${item.done?'✓':'○'}</button>
+            <button class="action-btn" onclick="event.stopPropagation();removeFromWL(${wl.id},${item.id})" style="color:var(--red)">✕</button>
+          </div>`;
+        }).join('')}
       </div>
     </div>`).join('');
 }
