@@ -19,7 +19,7 @@ let watchlists = JSON.parse(localStorage.getItem('reelora_watchlists') || JSON.s
 ]));
 let settings = JSON.parse(localStorage.getItem('reelora_settings') || JSON.stringify({
   tmdb_key:'', lang:'de-DE', drive_connected:false, drive_account:'',
-  google_client_id:'', drive_file_id:''
+  google_client_id:'', drive_file_id:'', vercel_url:''
 }));
 let currentMovie = null;
 let libView      = 'grid';
@@ -32,18 +32,46 @@ let toastTimer   = null;
 
 // ─── INIT ────────────────────────────────────────────────────
 window.addEventListener('load', () => {
-  // Einstellungen laden
+  // ─── Einstellungen in Felder laden ───
   if (settings.tmdb_key) {
-    document.getElementById('tmdb-key-input').value = settings.tmdb_key;
-    document.getElementById('api-status-row').style.display = 'flex';
+    const tkEl = document.getElementById('tmdb-key-input');
+    if (tkEl) tkEl.value = settings.tmdb_key;
+    const asEl = document.getElementById('api-status-row');
+    if (asEl) asEl.style.display = 'flex';
   }
-  if (settings.google_client_id) {
-    document.getElementById('google-client-id-input').value = settings.google_client_id;
+
+  // Vercel-URL laden und ins Feld eintragen
+  if (settings.vercel_url) {
+    const vEl = document.getElementById('vercel-url-input');
+    if (vEl) vEl.value = settings.vercel_url;
   }
-  document.getElementById('lang-select').value = settings.lang || 'de-DE';
+
+  const langEl = document.getElementById('lang-select');
+  if (langEl) langEl.value = settings.lang || 'de-DE';
+
   updateDriveUI();
 
-  // OAuth wird jetzt über Vercel-Callback in URL-Params gehandhabt (index.html init)
+  // ─── OAuth-Rückkehr von Vercel verarbeiten ───
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('drive_connected') === '1') {
+    const email = urlParams.get('drive_email') || '';
+    settings.drive_connected = true;
+    settings.drive_account   = email;
+    save();
+    history.replaceState({}, '', window.location.pathname);
+    toast('✓ Google Drive verbunden: ' + email + ' → MeineApps/ReelOra');
+    updateDriveUI();
+    loadFromDrive();
+  }
+  if (urlParams.get('drive_error')) {
+    toast('Drive Fehler: ' + urlParams.get('drive_error'), 'err');
+    history.replaceState({}, '', window.location.pathname);
+  }
+
+  // ─── Drive-Status prüfen wenn URL vorhanden ───
+  if (settings.vercel_url && settings.drive_connected) {
+    checkDriveStatus();
+  }
 
   renderTrending();
   renderRecentArchive();
@@ -57,7 +85,7 @@ function save() {
   localStorage.setItem('reelora_library',    JSON.stringify(library));
   localStorage.setItem('reelora_watchlists', JSON.stringify(watchlists));
   localStorage.setItem('reelora_settings',   JSON.stringify(settings));
-  if (driveToken && settings.drive_connected &&
+  if (settings.drive_connected && settings.vercel_url &&
       document.getElementById('auto-sync-toggle')?.classList.contains('on')) {
     driveSync();
   }
