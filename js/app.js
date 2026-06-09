@@ -888,6 +888,7 @@ async function doAutocomplete(q, type, input) {
     document.body.appendChild(backdrop);
   }
   backdrop.style.display = 'block';
+  document.body.classList.add('autocomplete-open');
 
   // Dropdown am body
   let drop = document.getElementById('autocomplete-' + type);
@@ -1009,6 +1010,7 @@ function closeAutocomplete(type) {
   if (!otherDrop || otherDrop.style.display === 'none') {
     const backdrop = document.getElementById('autocomplete-backdrop');
     if (backdrop) backdrop.style.display = 'none';
+    document.body.classList.remove('autocomplete-open');
   }
   autoIndex   = -1;
   autoResults = [];
