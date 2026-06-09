@@ -1,5 +1,5 @@
 // ReelOra Service Worker
-const CACHE_NAME = 'reelora-v1';
+const CACHE_NAME = 'reelora-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
