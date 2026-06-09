@@ -278,10 +278,12 @@ async function loadFullDetails(id) {
 
 function renderModalActions() {
   const isArchived = library.some(l => l.tmdb_id === currentMovie?.id);
+  const tmdbUrl = currentMovie?.id ? `https://www.themoviedb.org/movie/${currentMovie.id}` : null;
   document.getElementById('modal-actions').innerHTML = `
     <button class="btn-gold" onclick="archiveCurrentMovie()">${isArchived?'✓ Archiviert':'+ Archivieren'}</button>
     <button class="btn-outline" onclick="addCurrentToWatchlist()">🔖 Watchlist</button>
-    ${isArchived ? `<button class="btn-outline" onclick="removeFromLibrary('${currentMovie.id}')" style="border-color:var(--red);color:var(--red)">🗑 Löschen</button>` : `<button class="btn-outline" style="opacity:0.35;pointer-events:none">🗑 Löschen</button>`}`;
+    ${isArchived ? `<button class="btn-outline" onclick="removeFromLibrary('${currentMovie.id}')" style="border-color:var(--red);color:var(--red)">🗑 Löschen</button>` : `<button class="btn-outline" style="opacity:0.35;pointer-events:none">🗑 Löschen</button>`}
+    ${tmdbUrl ? `<a href="${tmdbUrl}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:8px;border:1px solid var(--border2);color:var(--text2);font-family:'Jost',sans-serif;font-size:13px;text-decoration:none;transition:all 0.2s" onmouseover="this.style.borderColor='var(--gold-dim)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">🌐 TMDB</a>` : ''}`;
 }
 
 function setRating(val) {
