@@ -147,11 +147,16 @@ function renderMovieGrid(containerId, movies) {
 
 async function searchMovies() {
   const q = document.getElementById('search-input')?.value.trim(); if (!q) return;
+  if (!settings.tmdb_key) {
+    toast('⚠ Bitte zuerst TMDB API Key in den Einstellungen eintragen', 'warn');
+    showPage('einstellungen', document.querySelectorAll('.nav-tab')[6]);
+    return;
+  }
   document.getElementById('search-loading').classList.add('visible');
   document.getElementById('search-results-section').style.display = 'none';
   const data = await tmdbFetch('/search/movie', `&query=${encodeURIComponent(q)}&include_adult=false`);
   document.getElementById('search-loading').classList.remove('visible');
-  if (!data?.results?.length) { toast('Keine Ergebnisse'); return; }
+  if (!data?.results?.length) { toast('Keine Ergebnisse gefunden'); return; }
   searchCache = data.results.slice(0, 15); renderSearchResults();
 }
 
