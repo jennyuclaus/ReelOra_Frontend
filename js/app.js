@@ -888,7 +888,15 @@ async function doAutocomplete(q, type, input) {
   }
 
   const rect = input.getBoundingClientRect();
-  drop.style.cssText = `position:fixed;top:${rect.bottom+6}px;left:${rect.left}px;width:${rect.width}px;z-index:9999;display:block;`;
+  const scrollY = window.scrollY || document.documentElement.scrollTop;
+  drop.style.cssText = `
+    position:absolute;
+    top:${rect.bottom + scrollY + 6}px;
+    left:${rect.left}px;
+    width:${rect.width}px;
+    z-index:9999;
+    display:block;
+  `;
   drop.innerHTML = '<div class="autocomplete-loading"><div class="spinner"></div> Suche...</div>';
 
   const endpoint = type === 'movie' ? '/search/movie' : '/search/tv';
