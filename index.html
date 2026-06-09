@@ -58,7 +58,13 @@
   <!-- ENTDECKEN TAB -->
   <div id="filme-tab-entdecken">
     <div class="search-bar">
-      <input class="search-input" id="search-input" placeholder="Film suchen..." onkeydown="if(event.key==='Enter')searchMovies()">
+      <div style="flex:1;position:relative">
+        <input class="search-input" id="search-input" placeholder="Film suchen..."
+          oninput="autocomplete(this.value,'movie')"
+          onkeydown="handleAutoKey(event,'movie')"
+          autocomplete="off" style="width:100%">
+        <div id="autocomplete-movie" class="autocomplete-dropdown" style="display:none"></div>
+      </div>
       <button class="btn-gold" onclick="searchMovies()">SUCHEN</button>
     </div>
     <div class="filter-row" id="filter-row">
@@ -168,7 +174,13 @@
   </div>
   <div id="serien-tab-entdecken">
     <div class="search-bar">
-      <input class="search-input" id="series-search-input" placeholder="Serie suchen..." onkeydown="if(event.key==='Enter')searchSeries()">
+      <div style="flex:1;position:relative">
+        <input class="search-input" id="series-search-input" placeholder="Serie suchen..."
+          oninput="autocomplete(this.value,'tv')"
+          onkeydown="handleAutoKey(event,'tv')"
+          autocomplete="off" style="width:100%">
+        <div id="autocomplete-tv" class="autocomplete-dropdown" style="display:none"></div>
+      </div>
       <button class="btn-gold" onclick="searchSeries()">SUCHEN</button>
     </div>
     <div class="filter-row" id="series-filter-row">
