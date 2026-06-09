@@ -115,8 +115,10 @@ body{
   overflow:hidden;cursor:pointer;transition:all 0.25s;position:relative;
 }
 .movie-card:hover{border-color:var(--gold-dim);transform:translateY(-3px);}
-.autocomplete-open .movie-card{transform:none !important;z-index:1 !important;}
-.autocomplete-open .movie-grid,.autocomplete-open .lib-list{position:relative;z-index:1;}
+.autocomplete-open .movie-card{transform:none !important;z-index:auto !important;position:relative;}
+.autocomplete-open .movie-grid,.autocomplete-open .lib-list,.autocomplete-open .page{z-index:1 !important;position:relative;}
+.autocomplete-open #filme-tab-entdecken > *:not(.search-bar){opacity:0.3;pointer-events:none;}
+.autocomplete-open #serien-tab-entdecken > *:not(.search-bar){opacity:0.3;pointer-events:none;}
 .movie-poster{
   width:100%;aspect-ratio:2/3;background:var(--bg4);
   display:flex;align-items:center;justify-content:center;
@@ -441,13 +443,15 @@ select{
 
 /* ===== AUTOCOMPLETE ===== */
 .autocomplete-dropdown {
-  background:#141414;
-  border:1px solid rgba(201,168,76,0.35);
+  background:#0e0e0e !important;
+  border:1px solid rgba(201,168,76,0.4);
+  border-top:none;
   border-radius:0 0 14px 14px;
   z-index:99999 !important;
   overflow-y:auto;
-  box-shadow:0 24px 60px rgba(0,0,0,0.95);
-  max-height:420px;
+  box-shadow:0 40px 80px rgba(0,0,0,1), 0 0 0 100vw rgba(0,0,0,0);
+  max-height:480px;
+  min-height:80px;
 }
 .autocomplete-item {
   display:flex;align-items:center;gap:12px;
