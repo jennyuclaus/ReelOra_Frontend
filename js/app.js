@@ -878,7 +878,18 @@ function autocomplete(q, type) {
 async function doAutocomplete(q, type, input) {
   if (!settings.tmdb_key || !input) return;
 
-  // Dropdown am body – kein Clipping
+  // Backdrop – alles darunter abdecken
+  let backdrop = document.getElementById('autocomplete-backdrop');
+  if (!backdrop) {
+    backdrop = document.createElement('div');
+    backdrop.id = 'autocomplete-backdrop';
+    backdrop.style.cssText = 'position:fixed;inset:0;z-index:9998;background:transparent';
+    backdrop.onclick = () => { closeAutocomplete('movie'); closeAutocomplete('tv'); };
+    document.body.appendChild(backdrop);
+  }
+  backdrop.style.display = 'block';
+
+  // Dropdown am body
   let drop = document.getElementById('autocomplete-' + type);
   if (!drop) {
     drop = document.createElement('div');
@@ -889,7 +900,7 @@ async function doAutocomplete(q, type, input) {
 
   const rect = input.getBoundingClientRect();
   drop.style.position = 'fixed';
-  drop.style.top      = (rect.bottom + 6) + 'px';
+  drop.style.top      = (rect.bottom + 4) + 'px';
   drop.style.left     = rect.left + 'px';
   drop.style.width    = rect.width + 'px';
   drop.style.zIndex   = '99999';
@@ -992,6 +1003,13 @@ function updateAutoHighlight(type) {
 function closeAutocomplete(type) {
   const drop = document.getElementById('autocomplete-' + type);
   if (drop) { drop.style.display = 'none'; drop.innerHTML = ''; }
+  // Backdrop nur verstecken wenn beide Dropdowns zu sind
+  const other = type === 'movie' ? 'tv' : 'movie';
+  const otherDrop = document.getElementById('autocomplete-' + other);
+  if (!otherDrop || otherDrop.style.display === 'none') {
+    const backdrop = document.getElementById('autocomplete-backdrop');
+    if (backdrop) backdrop.style.display = 'none';
+  }
   autoIndex   = -1;
   autoResults = [];
 }
