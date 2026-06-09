@@ -900,9 +900,20 @@ async function doAutocomplete(q, type, input) {
   }
 
   // Wrapper-Div (flex:1) als Referenz für Breite und Position
-  const wrapper = input.parentElement;
-  const rect    = wrapper ? wrapper.getBoundingClientRect() : input.getBoundingClientRect();
-  drop.style.cssText = `position:fixed;top:${rect.bottom+2}px;left:${rect.left}px;width:${rect.width}px;z-index:99999;display:block;`;
+  const wrapper  = input.parentElement;
+  const rect     = wrapper ? wrapper.getBoundingClientRect() : input.getBoundingClientRect();
+  const maxH     = Math.min(400, window.innerHeight - rect.bottom - 20);
+  drop.style.cssText = `
+    position:fixed;
+    top:${rect.bottom+2}px;
+    left:${rect.left}px;
+    width:${rect.width}px;
+    max-height:${maxH}px;
+    z-index:99999;
+    display:block;
+    overflow-y:auto;
+    overflow-x:hidden;
+  `;
   drop.innerHTML = '<div class="autocomplete-loading"><div class="spinner"></div> Suche...</div>';
 
   const endpoint = type === 'movie' ? '/search/movie' : '/search/tv';
