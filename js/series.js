@@ -362,6 +362,7 @@ function renderSeriesModalActions() {
   const statusOptions = ['watching','completed','paused','planned'];
   const statusLabels  = {watching:'Am Schauen',completed:'Abgeschlossen',paused:'Pausiert',planned:'Geplant'};
 
+  const tmdbSeriesUrl = currentSeries?.id ? `https://www.themoviedb.org/tv/${currentSeries.id}` : null;
   document.getElementById('modal-actions').innerHTML = `
     <button class="btn-gold" onclick="quickAddSeries(${currentSeries?.id},'${esc(currentSeries?.title||currentSeries?.name||'')}','${currentSeries?.poster_path||''}')">${isArchived?'✓ Archiviert':'+ Archivieren'}</button>
     <button class="btn-outline" onclick="addSeriesToWatchlist(${currentSeries?.id},'${esc(currentSeries?.title||currentSeries?.name||'')}','${currentSeries?.poster_path||''}')">${inWL?'🔖 In Watchlist':'🔖 Watchlist'}</button>
@@ -371,7 +372,8 @@ function renderSeriesModalActions() {
         ${statusOptions.map(s => `<option value="${s}" ${existing?.status===s?'selected':''}>${statusLabels[s]}</option>`).join('')}
       </select>
       <button class="btn-outline" onclick="removeSeriesFromLibrary(${currentSeries.id})" style="border-color:var(--red);color:var(--red)">🗑 Löschen</button>
-    ` : ''}`;
+    ` : ''}
+    ${tmdbSeriesUrl ? `<a href="${tmdbSeriesUrl}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:8px;border:1px solid var(--border2);color:var(--text2);font-family:'Jost',sans-serif;font-size:13px;text-decoration:none;transition:all 0.2s" onmouseover="this.style.borderColor='var(--gold-dim)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">🌐 TMDB</a>` : ''}`;
 }
 
 function setSeriesStatus(id, status) {
