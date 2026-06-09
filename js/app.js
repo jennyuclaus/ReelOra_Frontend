@@ -899,13 +899,17 @@ async function doAutocomplete(q, type, input) {
     document.body.appendChild(drop);
   }
 
-  const rect = input.getBoundingClientRect();
-  drop.style.position = 'fixed';
-  drop.style.top      = (rect.bottom + 4) + 'px';
-  drop.style.left     = rect.left + 'px';
-  drop.style.width    = rect.width + 'px';
-  drop.style.zIndex   = '99999';
-  drop.style.display  = 'block';
+  // Suchfeld-Breite inkl. Suchen-Button (gesamte Search-Bar)
+  const searchBar = input.closest('.search-bar') || input.parentElement?.parentElement || input.parentElement;
+  const barRect   = (searchBar && searchBar.classList?.contains('search-bar')) ? searchBar.getBoundingClientRect() : input.getBoundingClientRect();
+  drop.style.cssText = `
+    position: fixed;
+    top: ${barRect.bottom + 2}px;
+    left: ${barRect.left}px;
+    width: ${barRect.width}px;
+    z-index: 99999;
+    display: block;
+  `;
   drop.innerHTML = '<div class="autocomplete-loading"><div class="spinner"></div> Suche...</div>';
 
   const endpoint = type === 'movie' ? '/search/movie' : '/search/tv';
