@@ -437,7 +437,7 @@ function showSeriesListPicker(id, title, posterPath) {
   document.getElementById('series-list-picker')?.remove();
   const overlay = document.createElement('div');
   overlay.id = 'series-list-picker';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:400;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px';
 
   const sLists = (typeof seriesNamedLists !== 'undefined') ? seriesNamedLists : [];
   const safeTitle = title.replace(/'/g, "\\'");
