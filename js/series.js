@@ -440,7 +440,6 @@ function showSeriesListPicker(id, title, posterPath) {
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:400;display:flex;align-items:center;justify-content:center;padding:20px';
 
   const sLists = (typeof seriesNamedLists !== 'undefined') ? seriesNamedLists : [];
-  const fLists = (typeof watchlists !== 'undefined') ? watchlists : [];
   const safeTitle = title.replace(/'/g, "\\'");
 
   const ownBtn = '<button onclick="addSeriesToOwnWatchlist(' + id + ',\'' + safeTitle + '\',\'' + posterPath + '\')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.4);border-radius:10px;color:var(--gold);font-family:\'Jost\',sans-serif;font-size:14px;cursor:pointer;text-align:left;width:100%"><div style=\"display:flex;align-items:center;gap:8px\"><span>\u{1F4FA}</span><span>Serien-Watchlist</span></div><span style=\"font-size:12px;opacity:0.7\">' + seriesWatchlist.length + ' Serien</span></button>';
@@ -455,7 +454,7 @@ function showSeriesListPicker(id, title, posterPath) {
 
   const filmSep = fLists.length ? '<div style=\"font-size:11px;color:var(--text3);padding:8px 4px;letter-spacing:1px\">FILM-LISTEN</div>' : '';
 
-  overlay.innerHTML = '<div style=\"background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:24px;max-width:380px;width:100%\"><div style=\"font-family:\'Cinzel\',serif;font-size:14px;color:var(--gold);letter-spacing:2px;margin-bottom:6px\">ZUR WATCHLIST HINZUF\u00dcGEN</div><div style=\"font-size:13px;color:var(--text2);margin-bottom:16px\">' + title + '</div><div style=\"display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto\">' + ownBtn + namedBtns + filmSep + filmBtns + '</div><button onclick=\"document.getElementById(\'series-list-picker\').remove()\" style=\"margin-top:14px;width:100%;padding:10px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:\'Jost\',sans-serif;font-size:13px;cursor:pointer\">Abbrechen</button></div>';
+  overlay.innerHTML = '<div style=\"background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:24px;max-width:380px;width:100%\"><div style=\"font-family:\'Cinzel\',serif;font-size:14px;color:var(--gold);letter-spacing:2px;margin-bottom:6px\">ZUR SERIEN-WATCHLIST</div><div style=\"font-size:13px;color:var(--text2);margin-bottom:16px\">' + title + '</div><div style=\"display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto\">' + ownBtn + namedBtns + '</div><button onclick=\"document.getElementById(\'series-list-picker\').remove()\" style=\"margin-top:14px;width:100%;padding:10px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:\'Jost\',sans-serif;font-size:13px;cursor:pointer\">Abbrechen</button></div>';
 
   document.body.appendChild(overlay);
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };

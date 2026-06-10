@@ -57,16 +57,22 @@ window.addEventListener('load', () => {
   renderLibrary(); renderWatchlists();
 
   // ─── Autocomplete Event Listeners ────────────────────────
-  // Film-Suche
   const filmInput = document.getElementById('search-input');
   if (filmInput) {
-    filmInput.addEventListener('input', e => autocomplete(e.target.value, 'movie'));
+    filmInput.addEventListener('input', e => {
+      autocomplete(e.target.value, 'movie');
+      const btn = document.getElementById('clear-movie-btn');
+      if (btn) btn.style.display = e.target.value ? 'block' : 'none';
+    });
     filmInput.addEventListener('keydown', e => handleAutoKey(e, 'movie'));
   }
-  // Serien-Suche
   const seriesInput = document.getElementById('series-search-input');
   if (seriesInput) {
-    seriesInput.addEventListener('input', e => autocomplete(e.target.value, 'tv'));
+    seriesInput.addEventListener('input', e => {
+      autocomplete(e.target.value, 'tv');
+      const btn = document.getElementById('clear-tv-btn');
+      if (btn) btn.style.display = e.target.value ? 'block' : 'none';
+    });
     seriesInput.addEventListener('keydown', e => handleAutoKey(e, 'tv'));
   }
 });
@@ -1041,6 +1047,21 @@ function filterKodiMovies() {
 
 function tmdbGenreName(id) {
   return {28:'Action',12:'Abenteuer',16:'Animation',35:'Komödie',80:'Krimi',99:'Dokumentation',18:'Drama',10751:'Familie',14:'Fantasy',36:'Geschichte',27:'Horror',10402:'Musik',9648:'Mystery',10749:'Romanze',878:'Science-Fiction',53:'Thriller',10752:'Kriegsfilm',37:'Western'}[id]||'';
+}
+
+// ─── CLEAR SEARCH ────────────────────────────────────────
+function clearSearch(inputId, type) {
+  const input = document.getElementById(inputId);
+  if (input) { input.value = ''; input.focus(); }
+  const btn = document.getElementById('clear-' + type + '-btn');
+  if (btn) btn.style.display = 'none';
+  closeAutocomplete(type);
+  // Suchergebnisse ausblenden
+  if (type === 'movie') {
+    document.getElementById('search-results-section').style.display = 'none';
+    searchCache = [];
+  }
+  if (type === 'tv' && typeof clearSeriesSearch === 'function') clearSeriesSearch();
 }
 
 // ─── AUTOCOMPLETE ────────────────────────────────────────────
