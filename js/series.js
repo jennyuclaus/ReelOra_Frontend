@@ -448,11 +448,6 @@ function showSeriesListPicker(id, title, posterPath) {
     '<button onclick="addSeriesToNamedList(' + id + ',\'' + safeTitle + '\',\'' + posterPath + '\',' + l.id + ')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:\'Jost\',sans-serif;font-size:14px;cursor:pointer;text-align:left;width:100%"><div style=\"display:flex;align-items:center;gap:8px\"><span>\u{1F4FA}</span><span>' + l.name + '</span></div><span style=\"font-size:12px;color:var(--text2)\">' + (l.items||[]).length + ' Serien</span></button>'
   ).join('');
 
-  const filmBtns = fLists.map(wl =>
-    '<button onclick="addSeriesToFilmList(' + id + ',\'' + safeTitle + '\',\'' + posterPath + '\',' + wl.id + ')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:\'Jost\',sans-serif;font-size:14px;cursor:pointer;text-align:left;width:100%"><div style=\"display:flex;align-items:center;gap:8px\"><span>\u{1F3AC}</span><span>' + wl.name + '</span></div><span style=\"font-size:12px;color:var(--text2)\">' + (wl.items||[]).length + ' Eintr\u00e4ge</span></button>'
-  ).join('');
-
-  const filmSep = fLists.length ? '<div style=\"font-size:11px;color:var(--text3);padding:8px 4px;letter-spacing:1px\">FILM-LISTEN</div>' : '';
 
   overlay.innerHTML = '<div style=\"background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:24px;max-width:380px;width:100%\"><div style=\"font-family:\'Cinzel\',serif;font-size:14px;color:var(--gold);letter-spacing:2px;margin-bottom:6px\">ZUR SERIEN-WATCHLIST</div><div style=\"font-size:13px;color:var(--text2);margin-bottom:16px\">' + title + '</div><div style=\"display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto\">' + ownBtn + namedBtns + '</div><button onclick=\"document.getElementById(\'series-list-picker\').remove()\" style=\"margin-top:14px;width:100%;padding:10px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:\'Jost\',sans-serif;font-size:13px;cursor:pointer\">Abbrechen</button></div>';
 
