@@ -136,8 +136,8 @@
     <div class="new-list-form" id="new-list-form">
       <div style="font-size:13px;color:var(--text2);margin-bottom:8px">Listenname</div>
       <div class="form-row">
-        <input class="search-input" id="new-list-name" placeholder="z.B. Must-Watch 2024...">
-        <button class="btn-gold" onclick="createNewList()">Erstellen</button>
+        <input class="search-input" id="new-list-name-settings" placeholder="z.B. Must-Watch 2024...">
+        <button class="btn-gold" onclick="createNewListFromSettings()">Erstellen</button>
       </div>
     </div>
     <div id="watchlist-container"></div>
@@ -265,34 +265,16 @@
   </div>
 </div>
 
-<!-- WATCHLISTEN -->
-<div id="page-watchlist" class="page">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-    <div class="section-title" style="margin:0">MEINE LISTEN</div>
-    <button class="btn-outline" onclick="toggleNewListForm()">+ Neue Liste</button>
-  </div>
-  <div class="new-list-form" id="new-list-form">
-    <div style="font-size:13px;color:var(--text2);margin-bottom:8px">Listenname</div>
-    <div class="form-row">
-      <input class="search-input" id="new-list-name" placeholder="z.B. Must-Watch 2024...">
-      <button class="btn-gold" onclick="createNewList()">Erstellen</button>
-    </div>
-  </div>
-  <div id="watchlist-container"></div>
-</div>
+
+
+
 
 <!-- STATISTIKEN -->
 <div id="page-statistiken" class="page">
   <div class="stats-grid" id="stats-cards"></div>
   <div class="two-col">
-    <div class="chart-area">
-      <div class="chart-title">Filme pro Monat</div>
-      <div class="bar-chart" id="monthly-chart"></div>
-    </div>
-    <div class="chart-area">
-      <div class="chart-title">Lieblingsgenres</div>
-      <div class="genre-list" id="genre-chart"></div>
-    </div>
+    <div class="chart-area"><div class="chart-title">Filme pro Monat</div><div class="bar-chart" id="monthly-chart"></div></div>
+    <div class="chart-area"><div class="chart-title">Lieblingsgenres</div><div class="genre-list" id="genre-chart"></div></div>
   </div>
   <div class="chart-area" style="margin-top:16px">
     <div class="chart-title">Archivierte Filme nach Jahrzehnt</div>

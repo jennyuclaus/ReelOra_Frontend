@@ -104,8 +104,7 @@ function showFilmePage(tab, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   if (tab === 'statistiken') {
-    // Statistiken als eigene Seite
-    document.getElementById('page-statistiken').classList.add('active');
+    document.getElementById('page-statistiken')?.classList.add('active');
     if (btn) btn.classList.add('active');
     renderStats();
     return;
@@ -129,48 +128,7 @@ function showFilmeTab(tab, btn) {
   if (tab === 'entdecken') { renderTrending(); renderRecentArchive(); }
 }
 
-function renderFilmeStats() {
-  // Statistik-Karten im Filme-Tab
-  const total     = library.length;
-  const rated     = library.filter(f=>f.rating>0).length;
-  const avgRating = rated ? (library.reduce((s,f)=>s+(f.rating||0),0)/rated).toFixed(1) : '—';
-  const totalHours = Math.floor(library.reduce((s,f)=>s+(f.runtime||0),0)/60);
-  const el = document.getElementById('filme-stats-cards');
-  if (el) el.innerHTML = [
-    {val:total,label:'Archivierte Filme',sub:''},
-    {val:avgRating,label:'Ø Bewertung',sub:'von 5 Sternen'},
-    {val:totalHours+'h',label:'Geschaute Zeit',sub:Math.floor(totalHours/24)+' Tage'},
-    {val:watchlists.reduce((s,w)=>s+w.items.length,0),label:'Watchlist-Einträge',sub:''},
-  ].map(s=>`<div class="stat-card"><div class="stat-val">${s.val}</div><div class="stat-label">${s.label}</div>${s.sub?`<div class="stat-sub">${s.sub}</div>`:''}</div>`).join('');
-
-  // Charts (shared elements)
-  const now = new Date(), months = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
-  const mc = Array(6).fill(0);
-  library.forEach(f=>{const d=new Date(f.added),diff=(now.getFullYear()-d.getFullYear())*12+(now.getMonth()-d.getMonth());if(diff>=0&&diff<6)mc[5-diff]++;});
-  const maxM = Math.max(...mc,1);
-  const mc_el = document.getElementById('monthly-chart');
-  if (mc_el) mc_el.innerHTML = mc.map((c,i)=>{const mo=new Date(now.getFullYear(),now.getMonth()-(5-i),1);return `<div class="bar-col"><div class="bar-wrap"><div class="bar" style="height:${Math.round(c/maxM*100)}%"></div></div><div class="bar-label">${months[mo.getMonth()]}</div></div>`;}).join('');
-
-  const genreCounts={};
-  library.forEach(f=>(f.genres||[]).forEach(g=>{genreCounts[g]=(genreCounts[g]||0)+1;}));
-  const topGenres=Object.entries(genreCounts).sort((a,b)=>b[1]-a[1]).slice(0,6);
-  const maxG=topGenres.length?topGenres[0][1]:1;
-  const gc_el = document.getElementById('genre-chart');
-  if (gc_el) gc_el.innerHTML = topGenres.length ? topGenres.map(([g,c])=>`<div class="genre-row"><div class="genre-name">${g}</div><div class="genre-bar-wrap"><div class="genre-bar" style="width:${Math.round(c/maxG*100)}%"></div></div><div class="genre-pct">${Math.round(c/Math.max(total,1)*100)}%</div></div>`).join('') : '<div style="color:var(--text3);font-size:13px;padding:10px 0">Noch keine Daten</div>';
-
-  const decades={};
-  library.forEach(f=>{if(f.year){const d=Math.floor(parseInt(f.year)/10)*10;if(!decades[d])decades[d]=0;decades[d]++;}});
-  const decArr=Object.entries(decades).sort((a,b)=>a[0]-b[0]),maxD=Math.max(...decArr.map(([,v])=>v),1);
-  const dc_el = document.getElementById('decade-chart');
-  if (dc_el) dc_el.innerHTML = decArr.length ? decArr.map(([d,v])=>`<div class="bar-col"><div class="bar-wrap"><div class="bar" style="height:${Math.round(v/maxD*100)}%"></div></div><div class="bar-label">${d}er</div></div>`).join('') : '<div style="color:var(--text3);font-size:13px">Noch keine Daten</div>';
-
-  const topRated=[...library].filter(f=>f.rating>0).sort((a,b)=>b.rating-a.rating).slice(0,5);
-  const tr_el = document.getElementById('top-rated-list');
-  if (tr_el) tr_el.innerHTML = topRated.map((f,i)=>{
-    const b64=encodeMovie({id:f.tmdb_id,title:f.title,year:f.year,poster_path:f.poster_path,vote_average:(f.rating||0)*2,overview:f.overview,genres:[]});
-    return `<div class="lib-item" onclick="openMovieDetail('${b64}')"><div style="font-family:'Cinzel',serif;font-size:14px;color:var(--text3);width:24px;text-align:center;flex-shrink:0">${i+1}</div><div class="lib-poster">${f.poster_path?`<img src="${IMG_BASE}${f.poster_path}" loading="lazy">`:'🎬'}</div><div class="lib-info"><div class="lib-title">${esc(f.title)}</div><div class="lib-meta">${f.year||''}</div></div><div class="lib-rating">★ ${f.rating}</div></div>`;
-  }).join('') || '<div style="color:var(--text3);font-size:13px;padding:20px 0;text-align:center">Noch keine bewerteten Filme</div>';
-}
+function renderFilmeStats() { renderStats(); }
 
 // ─── TMDB ────────────────────────────────────────────────────
 async function tmdbFetch(endpoint, params = '') {
@@ -549,6 +507,12 @@ function addCurrentToWatchlist() {
   if (currentMovie) addToWatchlistById(currentMovie.id, currentMovie.title, currentMovie.poster_path||'', currentMovie.year||'');
 }
 function toggleNewListForm() { document.getElementById('new-list-form').classList.toggle('open'); }
+function createNewListFromSettings() {
+  const el = document.getElementById('new-list-name-settings');
+  if (!el || !el.value.trim()) return;
+  watchlists.push({id:Date.now(), name:el.value.trim(), items:[], created:Date.now()});
+  save(); el.value = ''; toast('✓ Liste erstellt'); renderWatchlists();
+}
 function toggleNewSeriesListForm() {
   const f1 = document.getElementById('new-series-list-form');
   const f2 = document.getElementById('new-series-list-form-inline');
