@@ -315,9 +315,24 @@ select{
 
 /* ===== RESPONSIVE ===== */
 @media(max-width:768px){
-  .topbar{flex-wrap:wrap;gap:10px;}
-  .nav-tabs{flex-wrap:wrap;}
-  .nav-tab{font-size:11px;padding:6px 10px;}
+  .topbar{
+    flex-wrap:nowrap;
+    gap:0;
+    padding:10px 14px;
+    align-items:center;
+  }
+  .logo{font-size:16px;letter-spacing:2px;flex-shrink:0;}
+  .logo span{display:none;} /* Text verstecken, nur Icon */
+  .nav-tabs{
+    flex:1;
+    display:flex;
+    flex-wrap:wrap;
+    gap:2px;
+    justify-content:center;
+    margin:0 8px;
+  }
+  .nav-tab{font-size:10px;padding:5px 8px;letter-spacing:0.5px;}
+  .topbar-right{flex-shrink:0;margin-left:4px;}
   .two-col{grid-template-columns:1fr;}
   .stats-grid{grid-template-columns:repeat(2,1fr);}
   .setting-input{width:150px;}
