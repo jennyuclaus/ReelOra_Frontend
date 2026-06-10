@@ -302,7 +302,11 @@ async function loadFullDetails(id) {
 
 function renderModalActions() {
   const isArchived = library.some(l => l.tmdb_id === currentMovie?.id);
-  const tmdbUrl = currentMovie?.id ? `https://www.themoviedb.org/movie/${currentMovie.id}` : null;
+  // Prüfen ob es eine Serie ist (in seriesLibrary oder seriesWatchlist)
+  const isSeries = (typeof seriesLibrary !== 'undefined' && seriesLibrary.some(s => s.tmdb_id === currentMovie?.id)) ||
+                   (typeof seriesWatchlist !== 'undefined' && seriesWatchlist.some(s => s.tmdb_id === currentMovie?.id));
+  const tmdbType = currentMovie?.media_type === 'tv' || isSeries ? 'tv' : 'movie';
+  const tmdbUrl  = currentMovie?.id ? `https://www.themoviedb.org/${tmdbType}/${currentMovie.id}` : null;
   document.getElementById('modal-actions').innerHTML = `
     <button class="btn-gold" onclick="archiveCurrentMovie()">${isArchived?'✓ Archiviert':'+ Archivieren'}</button>
     <button class="btn-outline" onclick="addCurrentToWatchlist()">🔖 Watchlist</button>
@@ -554,7 +558,10 @@ function renderWatchlists() {
         ${!wl.items.length ? '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">Noch keine Filme</div>' : ''}
         ${wl.items.map((item,i) => {
           // Film-Daten aus Bibliothek holen falls vorhanden
-          const libEntry = library.find(l => l.tmdb_id === item.id);
+          const libEntry    = library.find(l => l.tmdb_id === item.id);
+          const seriesEntry = (typeof seriesLibrary !== 'undefined') ? seriesLibrary.find(s => s.tmdb_id === item.id) : null;
+          const seriesWLEntry = (typeof seriesWatchlist !== 'undefined') ? seriesWatchlist.find(s => s.tmdb_id === item.id) : null;
+          const isSeriesItem = !!seriesEntry || !!seriesWLEntry || item.type === 'series';
           const b64 = encodeMovie({
             id:           item.id,
             title:        item.title,
@@ -562,9 +569,13 @@ function renderWatchlists() {
             poster_path:  libEntry?.poster_path || item.poster_path || '',
             vote_average: (libEntry?.rating||0) * 2,
             overview:     libEntry?.overview    || '',
-            genres:       libEntry?.genres?.map(g=>({name:g})) || []
+            genres:       libEntry?.genres?.map(g=>({name:g})) || [],
+            media_type:   isSeriesItem ? 'tv' : 'movie'
           });
-          return `<div class="wl-item" style="cursor:pointer" onclick="openMovieDetail('${b64}')">
+          const clickFn = isSeriesItem && typeof openSeriesDetail === 'function'
+            ? `openSeriesDetail('${b64}')`
+            : `openMovieDetail('${b64}')`;
+          return `<div class="wl-item" style="cursor:pointer" onclick="${clickFn}">
             <div class="wl-num">${i+1}</div>
             <div class="wl-poster">${(libEntry?.poster_path||item.poster_path)?`<img src="${IMG_BASE}${libEntry?.poster_path||item.poster_path}" loading="lazy">`:'🎬'}</div>
             <div class="wl-info">
