@@ -29,6 +29,7 @@
     <button class="nav-tab active" onclick="showFilmePage('entdecken',this)">Filme</button>
     <button class="nav-tab" onclick="showPage('serien',this)">Serien</button>
     <button class="nav-tab" onclick="showFilmePage('watchlist',this)">Watchlisten</button>
+    <button class="nav-tab" onclick="showFilmePage('statistiken',this)">Statistiken</button>
     <button class="nav-tab" onclick="showPage('import',this)">Kodi Import</button>
     <button class="nav-tab" onclick="showPage('einstellungen',this)">Einstellungen</button>
   </div>
@@ -52,7 +53,7 @@
     <button class="tab-sec active" id="ftab-entdecken" onclick="showFilmeTab('entdecken',this)">Entdecken</button>
     <button class="tab-sec" id="ftab-archiv" onclick="showFilmeTab('archiv',this)">Mein Archiv</button>
     <button class="tab-sec" id="ftab-watchlist" onclick="showFilmeTab('watchlist',this)">Watchlist</button>
-    <button class="tab-sec" id="ftab-statistiken" onclick="showFilmeTab('statistiken',this)">Statistiken</button>
+
   </div>
 
   <!-- ENTDECKEN TAB -->
@@ -124,8 +125,10 @@
 
   <!-- WATCHLIST TAB -->
   <div id="filme-tab-watchlist" style="display:none">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-      <div class="section-title" style="margin:0">MEINE LISTEN</div>
+
+    <!-- FILM-LISTEN -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div class="section-title" style="margin:0">🎬 FILM-LISTEN</div>
       <button class="btn-outline" onclick="toggleNewListForm()">+ Neue Liste</button>
     </div>
     <div class="new-list-form" id="new-list-form">
@@ -136,6 +139,23 @@
       </div>
     </div>
     <div id="watchlist-container"></div>
+
+    <div class="divider" style="margin:28px 0"></div>
+
+    <!-- SERIEN-LISTEN -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div class="section-title" style="margin:0">📺 SERIEN-LISTEN</div>
+      <button class="btn-outline" onclick="toggleNewSeriesListForm()">+ Neue Liste</button>
+    </div>
+    <div class="new-list-form" id="new-series-list-form-inline">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:8px">Listenname</div>
+      <div class="form-row">
+        <input class="search-input" id="new-series-list-name-inline" placeholder="z.B. Muss ich schauen...">
+        <button class="btn-gold" onclick="createNewSeriesListInline()">Erstellen</button>
+      </div>
+    </div>
+    <div id="series-watchlist-combined-container"></div>
+
   </div>
 
   <!-- STATISTIKEN TAB -->
@@ -219,7 +239,17 @@
     <div id="series-archive-container"></div>
   </div>
   <div id="serien-tab-watchlist" style="display:none">
-    <div class="section-title">SERIEN-WATCHLIST</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div class="section-title" style="margin:0">MEINE SERIEN-LISTEN</div>
+      <button class="btn-outline" onclick="toggleNewSeriesListForm()">+ Neue Liste</button>
+    </div>
+    <div class="new-list-form" id="new-series-list-form">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:8px">Listenname</div>
+      <div class="form-row">
+        <input class="search-input" id="new-series-list-name" placeholder="z.B. Muss ich schauen...">
+        <button class="btn-gold" onclick="createNewSeriesList()">Erstellen</button>
+      </div>
+    </div>
     <div id="series-watchlist-container"></div>
   </div>
   <div id="serien-tab-fortschritt" style="display:none">

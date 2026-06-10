@@ -36,6 +36,8 @@ window.addEventListener('load', () => {
   if (lang) lang.value = settings.lang || 'de-DE';
   syncKodiFields();
   updateDriveUI();
+  // Serien-Listen aus localStorage laden
+  window.seriesNamedLists = JSON.parse(localStorage.getItem('reelora_series_lists') || '[]');
   const params = new URLSearchParams(window.location.search);
   if (params.get('drive_connected') === '1') {
     const email = params.get('drive_email') || '';
@@ -95,13 +97,20 @@ function showPage(name, btn) {
 function showFilmePage(tab, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  if (tab === 'statistiken') {
+    // Statistiken als eigene Seite
+    document.getElementById('page-statistiken').classList.add('active');
+    if (btn) btn.classList.add('active');
+    renderStats();
+    return;
+  }
   document.getElementById('page-bibliothek').classList.add('active');
   if (btn) btn.classList.add('active');
   showFilmeTab(tab, document.getElementById('ftab-' + tab));
 }
 
 function showFilmeTab(tab, btn) {
-  ['entdecken','archiv','watchlist','statistiken'].forEach(t => {
+  ['entdecken','archiv','watchlist'].forEach(t => {
     const el = document.getElementById('filme-tab-' + t);
     if (el) el.style.display = 'none';
   });
@@ -109,10 +118,9 @@ function showFilmeTab(tab, btn) {
   const active = document.getElementById('filme-tab-' + tab);
   if (active) active.style.display = 'block';
   if (btn) btn.classList.add('active');
-  if (tab === 'archiv')      renderLibrary();
-  if (tab === 'watchlist')   renderWatchlists();
-  if (tab === 'statistiken') renderFilmeStats();
-  if (tab === 'entdecken')   { renderTrending(); renderRecentArchive(); }
+  if (tab === 'archiv')    renderLibrary();
+  if (tab === 'watchlist') { renderWatchlists(); renderSeriesWatchlistCombined(); }
+  if (tab === 'entdecken') { renderTrending(); renderRecentArchive(); }
 }
 
 function renderFilmeStats() {
@@ -535,6 +543,111 @@ function addCurrentToWatchlist() {
   if (currentMovie) addToWatchlistById(currentMovie.id, currentMovie.title, currentMovie.poster_path||'', currentMovie.year||'');
 }
 function toggleNewListForm() { document.getElementById('new-list-form').classList.toggle('open'); }
+function toggleNewSeriesListForm() {
+  const f1 = document.getElementById('new-series-list-form');
+  const f2 = document.getElementById('new-series-list-form-inline');
+  if (f1) f1.classList.toggle('open');
+  if (f2) f2.classList.toggle('open');
+}
+
+function createNewSeriesList() {
+  const name = (document.getElementById('new-series-list-name')?.value || '').trim();
+  if (!name) return;
+  if (typeof seriesNamedLists === 'undefined') window.seriesNamedLists = [];
+  seriesNamedLists.push({id: Date.now(), name, items: [], created: Date.now()});
+  saveSeriesLists();
+  renderSeriesWatchlistCombined();
+  const el = document.getElementById('new-series-list-name');
+  if (el) el.value = '';
+  document.getElementById('new-series-list-form')?.classList.remove('open');
+  toast('✓ Serie-Liste "'+name+'" erstellt');
+}
+
+function createNewSeriesListInline() {
+  const name = (document.getElementById('new-series-list-name-inline')?.value || '').trim();
+  if (!name) return;
+  if (typeof seriesNamedLists === 'undefined') window.seriesNamedLists = [];
+  seriesNamedLists.push({id: Date.now(), name, items: [], created: Date.now()});
+  saveSeriesLists();
+  renderSeriesWatchlistCombined();
+  const el = document.getElementById('new-series-list-name-inline');
+  if (el) el.value = '';
+  document.getElementById('new-series-list-form-inline')?.classList.remove('open');
+  toast('✓ Serien-Liste "'+name+'" erstellt');
+}
+
+function saveSeriesLists() {
+  if (typeof seriesNamedLists !== 'undefined')
+    localStorage.setItem('reelora_series_lists', JSON.stringify(seriesNamedLists));
+}
+
+// Serien-Watchlist (flach) + benannte Serien-Listen kombiniert rendern
+function renderSeriesWatchlistCombined() {
+  if (typeof seriesNamedLists === 'undefined') window.seriesNamedLists = JSON.parse(localStorage.getItem('reelora_series_lists') || '[]');
+  const c = document.getElementById('series-watchlist-combined-container');
+  if (!c) return;
+
+  // Flache Serien-Watchlist als erste "Liste"
+  const flatItems = (typeof seriesWatchlist !== 'undefined') ? seriesWatchlist : [];
+  const allLists = [
+    { id: 'series-default', name: 'Serien-Watchlist', items: flatItems.map(s => ({id: s.tmdb_id, title: s.title, poster_path: s.poster_path||'', done: false})), isDefault: true },
+    ...seriesNamedLists
+  ];
+
+  c.innerHTML = allLists.map(wl => `
+    <div class="list-section">
+      <div class="list-header">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="section-title" style="margin:0">${esc(wl.name)}</div>
+          <span style="font-size:12px;color:var(--text2)">${wl.items.length} Serien</span>
+        </div>
+        ${!wl.isDefault ? `<button class="btn-outline" style="font-size:11px;padding:5px 10px" onclick="deleteSeriesList(${wl.id})">✕ Löschen</button>` : ''}
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:0 16px">
+        ${!wl.items.length ? '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">Noch keine Serien</div>' : ''}
+        ${wl.items.map((item, i) => {
+          const b64 = encodeMovie({id:item.id, title:item.title, poster_path:item.poster_path||'', year:'', vote_average:0, overview:'', genres:[], media_type:'tv'});
+          return `<div class="wl-item" style="cursor:pointer" onclick="openSeriesDetail && openSeriesDetail('${b64}')">
+            <div class="wl-num">${i+1}</div>
+            <div class="wl-poster">${item.poster_path?`<img src="${IMG_BASE}${item.poster_path}" loading="lazy">`:'📺'}</div>
+            <div class="wl-info"><div class="wl-title">${esc(item.title)}</div></div>
+            <button class="wl-check ${item.done?'done':''}" onclick="event.stopPropagation();toggleSeriesListItem('${wl.id}',${item.id})">${item.done?'✓':'○'}</button>
+            <button class="action-btn" onclick="event.stopPropagation();removeFromSeriesList('${wl.id}',${item.id})" style="color:var(--red)">✕</button>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function deleteSeriesList(id) {
+  seriesNamedLists = seriesNamedLists.filter(l => l.id !== id);
+  saveSeriesLists(); renderSeriesWatchlistCombined(); toast('Liste gelöscht');
+}
+
+function toggleSeriesListItem(listId, itemId) {
+  if (listId === 'series-default') {
+    const item = seriesWatchlist?.find(s => s.tmdb_id === itemId);
+    if (item) { item.done = !item.done; saveSeries(); }
+  } else {
+    const list = seriesNamedLists?.find(l => l.id == listId);
+    const item = list?.items?.find(i => i.id === itemId);
+    if (item) { item.done = !item.done; saveSeriesLists(); }
+  }
+  renderSeriesWatchlistCombined();
+}
+
+function removeFromSeriesList(listId, itemId) {
+  if (listId === 'series-default') {
+    if (typeof seriesWatchlist !== 'undefined') {
+      seriesWatchlist = seriesWatchlist.filter(s => s.tmdb_id !== itemId);
+      saveSeries();
+    }
+  } else {
+    const list = seriesNamedLists?.find(l => l.id == listId);
+    if (list) { list.items = list.items.filter(i => i.id !== itemId); saveSeriesLists(); }
+  }
+  renderSeriesWatchlistCombined();
+}
 
 function createNewList() {
   const name = document.getElementById('new-list-name').value.trim(); if (!name) return;
@@ -717,10 +830,43 @@ async function loadFromDrive() {
     if(!res.ok){toast('Drive Fehler: '+res.status,'err');return;}
     const data=await res.json();
     if(!data.exists){toast('☁ Drive bereit – MeineApps/ReelOra angelegt');return;}
-    if(data.library?.length) library=data.library;
-    if(data.watchlists?.length) watchlists=data.watchlists;
-    if(data.seriesLibrary?.length&&typeof seriesLibrary!=='undefined'){seriesLibrary=data.seriesLibrary;saveSeries();}
-    if(data.seriesWatchlist?.length&&typeof seriesWatchlist!=='undefined'){seriesWatchlist=data.seriesWatchlist;saveSeries();}
+    // ── Filme: zusammenführen statt überschreiben ──
+    if(data.library?.length) {
+      const driveIds = new Set(data.library.map(f => f.tmdb_id));
+      const localOnly = library.filter(f => !driveIds.has(f.tmdb_id));
+      library = [...data.library, ...localOnly];
+    }
+
+    // ── Film-Watchlisten: zusammenführen ──
+    if(data.watchlists?.length) {
+      const driveIds = new Set(data.watchlists.map(w => w.id));
+      const localOnly = watchlists.filter(w => !driveIds.has(w.id));
+      // Einträge in bestehenden Listen zusammenführen
+      const merged = data.watchlists.map(dw => {
+        const local = watchlists.find(lw => lw.id === dw.id);
+        if (!local) return dw;
+        const driveItemIds = new Set(dw.items.map(i => i.id));
+        const localOnlyItems = local.items.filter(i => !driveItemIds.has(i.id));
+        return { ...dw, items: [...dw.items, ...localOnlyItems] };
+      });
+      watchlists = [...merged, ...localOnly];
+    }
+
+    // ── Serien-Archiv: zusammenführen ──
+    if(data.seriesLibrary?.length && typeof seriesLibrary!=='undefined') {
+      const driveIds = new Set(data.seriesLibrary.map(s => s.tmdb_id));
+      const localOnly = seriesLibrary.filter(s => !driveIds.has(s.tmdb_id));
+      seriesLibrary = [...data.seriesLibrary, ...localOnly];
+      saveSeries();
+    }
+
+    // ── Serien-Watchlist: zusammenführen ──
+    if(data.seriesWatchlist?.length && typeof seriesWatchlist!=='undefined') {
+      const driveIds = new Set(data.seriesWatchlist.map(s => s.tmdb_id));
+      const localOnly = seriesWatchlist.filter(s => !driveIds.has(s.tmdb_id));
+      seriesWatchlist = [...data.seriesWatchlist, ...localOnly];
+      saveSeries();
+    }
     save(); renderLibrary(); renderWatchlists(); renderStats(); renderRecentArchive();
     toast('☁ Geladen (Stand: '+(data.lastSync?new Date(data.lastSync).toLocaleString('de-DE'):'—')+')');
     const sub=document.getElementById('drive-account-sub'); if(sub) sub.textContent=(settings.drive_account||'')+' · MeineApps/ReelOra';
