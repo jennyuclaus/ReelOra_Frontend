@@ -485,7 +485,7 @@ function showDeleteConfirm(title, subtitle, onConfirm) {
   document.getElementById('delete-confirm-dialog')?.remove();
   const overlay = document.createElement('div');
   overlay.id = 'delete-confirm-dialog';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:400;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px';
   overlay.innerHTML = `<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:28px;max-width:400px;width:100%;text-align:center"><div style="font-size:36px;margin-bottom:12px">🗑</div><div style="font-family:'Cinzel',serif;font-size:16px;color:var(--text);margin-bottom:8px">${title}</div><div style="font-size:13px;color:var(--text2);margin-bottom:24px;line-height:1.5">${subtitle}</div><div style="display:flex;gap:12px;justify-content:center"><button onclick="document.getElementById('delete-confirm-dialog').remove()" style="padding:10px 24px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:'Jost',sans-serif;font-size:14px;cursor:pointer">Abbrechen</button><button id="delete-confirm-ok" style="padding:10px 24px;border-radius:8px;border:1px solid var(--red);background:rgba(224,82,82,0.12);color:var(--red);font-family:'Cinzel',serif;font-size:13px;letter-spacing:1px;cursor:pointer">LÖSCHEN</button></div></div>`;
   document.body.appendChild(overlay);
   document.getElementById('delete-confirm-ok').onclick = () => { overlay.remove(); onConfirm(); };
@@ -507,7 +507,7 @@ function showWatchlistPicker(id, title, posterPath, year) {
   document.getElementById('watchlist-picker-dialog')?.remove();
   const overlay = document.createElement('div');
   overlay.id = 'watchlist-picker-dialog';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:400;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px';
   const listButtons = watchlists.map(wl => `
     <button onclick="addToList(${id},'${esc(title)}','${posterPath}','${year}',${wl.id})"
       style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Jost',sans-serif;font-size:14px;cursor:pointer;text-align:left;width:100%"
