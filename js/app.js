@@ -269,6 +269,16 @@ async function setFilter(f, btn) {
 // ─── FILM DETAIL ─────────────────────────────────────────────
 function openMovieDetail(b64) {
   try { currentMovie = decodeMovie(b64); } catch { return; }
+  // Staffeln aus vorherigem Modal entfernen
+  const note = document.getElementById('modal-note');
+  if (note) {
+    let el = note.previousElementSibling;
+    while (el) {
+      const prev = el.previousElementSibling;
+      if (el.querySelector && (el.querySelector('.season-row') || el.textContent?.includes('Staffeln'))) el.remove();
+      el = prev;
+    }
+  }
   const existing = library.find(l => l.tmdb_id === currentMovie.id);
   document.getElementById('modal-title').textContent    = currentMovie.title;
   document.getElementById('modal-overview').textContent = currentMovie.overview || 'Keine Beschreibung.';
@@ -325,7 +335,24 @@ function removeFromLibrary(id, skipConfirm = false) {
   save(); toast('🗑 "'+film.title+'" gelöscht'); closeModal(); renderLibrary(); renderRecentArchive(); renderStats();
 }
 
-function closeModal() { document.getElementById('movie-modal').classList.remove('open'); currentMovie = null; }
+function closeModal() {
+  document.getElementById('movie-modal').classList.remove('open');
+  currentMovie = null;
+  // Staffeln-Einträge entfernen die von Serien injiziert wurden
+  document.querySelectorAll('#movie-modal .season-row, #movie-modal [style*="Staffeln"], #movie-modal .season-num').forEach(el => {
+    el.closest('div[style*="margin-top:16px"]')?.remove();
+  });
+  // Alle dynamisch eingefügten Staffeln-Sektionen entfernen
+  const note = document.getElementById('modal-note');
+  if (note) {
+    let el = note.previousElementSibling;
+    while (el) {
+      const prev = el.previousElementSibling;
+      if (el.querySelector('.season-row') || el.textContent.includes('Staffeln')) el.remove();
+      el = prev;
+    }
+  }
+}
 
 function quickArchive(id, title) {
   if (library.some(l => l.tmdb_id === id)) { toast('"'+title+'" bereits archiviert'); return; }
