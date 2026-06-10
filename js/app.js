@@ -533,7 +533,7 @@ function showWatchlistPicker(id, title, posterPath, year) {
 
 function addToList(id, title, posterPath, year, listId) {
   document.getElementById('watchlist-picker-dialog')?.remove();
-  const wl = watchlists.find(w => w.id === listId);
+  const wl = watchlists.find(w => w.id == listId);
   if (!wl) return;
   wl.items.push({id, title, added:Date.now(), done:false, poster_path:posterPath, year, rating:0});
   save(); toast('🔖 "'+title+'" → '+wl.name); renderWatchlists(); renderDiscoverGrid(); renderSearchResults();

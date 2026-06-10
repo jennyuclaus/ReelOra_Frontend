@@ -430,18 +430,7 @@ async function quickAddSeries(id, title, posterPath) {
 
 function addSeriesToWatchlist(id, title, posterPath) {
   if (seriesLibrary.some(s => s.tmdb_id === id)) { toast('Bereits im Archiv'); return; }
-  if (seriesWatchlist.some(s => s.tmdb_id === id)) { toast('Bereits in Watchlist'); return; }
-
-  // Film-Watchlisten für Serien nutzen (gleiche Listenstruktur)
-  if (typeof watchlists !== 'undefined' && watchlists.length > 1) {
-    showSeriesListPicker(id, title, posterPath);
-    return;
-  }
-  // Direkt in Serien-Watchlist
-  seriesWatchlist.push({tmdb_id: id, title, poster_path: posterPath, added: Date.now()});
-  saveSeries();
-  toast('\u{1F516} "' + title + '" zur Watchlist');
-  renderTrendingSeriesGrid(); renderSeriesSearchResults(); renderSeriesModalActions();
+  showSeriesListPicker(id, title, posterPath);
 }
 
 function showSeriesListPicker(id, title, posterPath) {
@@ -450,33 +439,39 @@ function showSeriesListPicker(id, title, posterPath) {
   overlay.id = 'series-list-picker';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:400;display:flex;align-items:center;justify-content:center;padding:20px';
 
-  // Zeige sowohl Serien-Watchlist als auch Film-Watchlisten
-  const filmListsHtml = (typeof watchlists !== 'undefined' ? watchlists : []).map(wl =>
-    `<button onclick="addSeriesToFilmList(${id},'${title.replace(/'/g,"\'")}','${posterPath}',${wl.id})"
-      style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Jost',sans-serif;font-size:14px;cursor:pointer;text-align:left;width:100%"
-      onmouseover="this.style.borderColor='var(--gold-dim)'" onmouseout="this.style.borderColor='var(--border)'">
-      <span>\u{1F4FA} ${wl.name}</span><span style="font-size:12px;color:var(--text2)">${wl.items?.length||0} Eintr\u00e4ge</span>
-    </button>`
+  const sLists = (typeof seriesNamedLists !== 'undefined') ? seriesNamedLists : [];
+  const fLists = (typeof watchlists !== 'undefined') ? watchlists : [];
+  const safeTitle = title.replace(/'/g, "\\'");
+
+  const ownBtn = '<button onclick="addSeriesToOwnWatchlist(' + id + ',\'' + safeTitle + '\',\'' + posterPath + '\')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.4);border-radius:10px;color:var(--gold);font-family:\'Jost\',sans-serif;font-size:14px;cursor:pointer;text-align:left;width:100%"><div style=\"display:flex;align-items:center;gap:8px\"><span>\u{1F4FA}</span><span>Serien-Watchlist</span></div><span style=\"font-size:12px;opacity:0.7\">' + seriesWatchlist.length + ' Serien</span></button>';
+
+  const namedBtns = sLists.map(l =>
+    '<button onclick="addSeriesToNamedList(' + id + ',\'' + safeTitle + '\',\'' + posterPath + '\',' + l.id + ')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:\'Jost\',sans-serif;font-size:14px;cursor:pointer;text-align:left;width:100%"><div style=\"display:flex;align-items:center;gap:8px\"><span>\u{1F4FA}</span><span>' + l.name + '</span></div><span style=\"font-size:12px;color:var(--text2)\">' + (l.items||[]).length + ' Serien</span></button>'
   ).join('');
 
-  overlay.innerHTML = `
-    <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:24px;max-width:380px;width:100%">
-      <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold);letter-spacing:2px;margin-bottom:6px">ZUR WATCHLIST HINZUF\u00dcGEN</div>
-      <div style="font-size:13px;color:var(--text2);margin-bottom:16px">${title}</div>
-      <div style="display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto">
-        <button onclick="addSeriesToOwnWatchlist(${id},'${title.replace(/'/g,"\'")}','${posterPath}')"
-          style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg3);border:1px solid var(--gold-dim);border-radius:10px;color:var(--gold);font-family:'Jost',sans-serif;font-size:14px;cursor:pointer;text-align:left;width:100%">
-          <span>\u{1F39E} Serien-Watchlist</span><span style="font-size:12px;color:var(--text2)">${seriesWatchlist.length} Serien</span>
-        </button>
-        ${filmListsHtml}
-      </div>
-      <button onclick="document.getElementById('series-list-picker').remove()"
-        style="margin-top:14px;width:100%;padding:10px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:'Jost',sans-serif;font-size:13px;cursor:pointer">
-        Abbrechen
-      </button>
-    </div>`;
+  const filmBtns = fLists.map(wl =>
+    '<button onclick="addSeriesToFilmList(' + id + ',\'' + safeTitle + '\',\'' + posterPath + '\',' + wl.id + ')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:\'Jost\',sans-serif;font-size:14px;cursor:pointer;text-align:left;width:100%"><div style=\"display:flex;align-items:center;gap:8px\"><span>\u{1F3AC}</span><span>' + wl.name + '</span></div><span style=\"font-size:12px;color:var(--text2)\">' + (wl.items||[]).length + ' Eintr\u00e4ge</span></button>'
+  ).join('');
+
+  const filmSep = fLists.length ? '<div style=\"font-size:11px;color:var(--text3);padding:8px 4px;letter-spacing:1px\">FILM-LISTEN</div>' : '';
+
+  overlay.innerHTML = '<div style=\"background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:24px;max-width:380px;width:100%\"><div style=\"font-family:\'Cinzel\',serif;font-size:14px;color:var(--gold);letter-spacing:2px;margin-bottom:6px\">ZUR WATCHLIST HINZUF\u00dcGEN</div><div style=\"font-size:13px;color:var(--text2);margin-bottom:16px\">' + title + '</div><div style=\"display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto\">' + ownBtn + namedBtns + filmSep + filmBtns + '</div><button onclick=\"document.getElementById(\'series-list-picker\').remove()\" style=\"margin-top:14px;width:100%;padding:10px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:\'Jost\',sans-serif;font-size:13px;cursor:pointer\">Abbrechen</button></div>';
+
   document.body.appendChild(overlay);
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+}
+
+function addSeriesToNamedList(id, title, posterPath, listId) {
+  document.getElementById('series-list-picker')?.remove();
+  if (typeof seriesNamedLists === 'undefined') return;
+  const list = seriesNamedLists.find(l => l.id == listId);
+  if (!list) return;
+  if (list.items.some(i => i.id === id)) { toast('Bereits in "' + list.name + '"'); return; }
+  list.items.push({id, title, poster_path: posterPath, added: Date.now(), done: false});
+  if (typeof saveSeriesLists === 'function') saveSeriesLists();
+  toast('\u{1F516} "' + title + '" \u2192 ' + list.name);
+  renderTrendingSeriesGrid(); renderSeriesSearchResults(); renderSeriesModalActions();
+  if (typeof renderSeriesWatchlistCombined === 'function') renderSeriesWatchlistCombined();
 }
 
 function addSeriesToOwnWatchlist(id, title, posterPath) {
@@ -489,7 +484,7 @@ function addSeriesToOwnWatchlist(id, title, posterPath) {
 
 function addSeriesToFilmList(id, title, posterPath, listId) {
   document.getElementById('series-list-picker')?.remove();
-  const wl = (typeof watchlists !== 'undefined') ? watchlists.find(w => w.id === listId) : null;
+  const wl = (typeof watchlists !== 'undefined') ? watchlists.find(w => w.id == listId) : null;
   if (!wl) return;
   if (wl.items.some(i => i.id === id)) { toast('Bereits in dieser Liste'); return; }
   wl.items.push({id, title, added: Date.now(), done: false, poster_path: posterPath, year: '', rating: 0, type: 'series'});
