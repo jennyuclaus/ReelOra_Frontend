@@ -463,40 +463,56 @@ function addToWatchlistById(id, title, posterPath='', year='') {
 
 function showWatchlistPicker(id, title, posterPath, year) {
   document.getElementById('watchlist-picker-dialog')?.remove();
+
   const overlay = document.createElement('div');
   overlay.id = 'watchlist-picker-dialog';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
-  const listButtons = watchlists.map(wl => `
-    <button onclick="event.stopPropagation();addToList(${id},'${esc(title)}','${posterPath}','${year}',${wl.id})"
-      ontouchend="event.stopPropagation();event.preventDefault();addToList(${id},'${esc(title)}','${posterPath}','${year}',${wl.id})"
-      style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Jost',sans-serif;font-size:14px;cursor:pointer;text-align:left;width:100%;-webkit-tap-highlight-color:rgba(201,168,76,0.2)"
-      onmouseover="this.style.borderColor='var(--gold-dim)'" onmouseout="this.style.borderColor='var(--border)'">
-      <div style="display:flex;align-items:center;gap:10px"><span>🔖</span><span>${esc(wl.name)}</span></div>
-      <span style="font-size:12px;color:var(--text2)">${wl.items.length} Filme</span>
-    </button>`).join('');
-  overlay.innerHTML = `
-    <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:24px;max-width:380px;width:100%">
-      <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold);letter-spacing:2px;margin-bottom:6px">WAS MÖCHTEST DU TUN?</div>
-      <div style="font-size:13px;color:var(--text2);margin-bottom:16px">${esc(title)}</div>
-      <div style="display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto">
-        <button onclick="event.stopPropagation();quickArchive(${id},'${esc(title)}');document.getElementById('watchlist-picker-dialog').remove()"
-          ontouchend="event.stopPropagation();event.preventDefault();quickArchive(${id},'${esc(title)}');document.getElementById('watchlist-picker-dialog').remove()"
-          style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.4);border-radius:10px;color:var(--gold);font-family:'Jost',sans-serif;font-size:14px;cursor:pointer;text-align:left;width:100%;-webkit-tap-highlight-color:rgba(201,168,76,0.2)">
-          <span style="font-size:20px">🎬</span>
-          <div><div style="font-weight:600">Zu Mein Archiv hinzufügen</div><div style="font-size:11px;opacity:0.7">Film direkt archivieren</div></div>
-        </button>
-        ${listButtons}
-      </div>
-      <button onclick="document.getElementById('watchlist-picker-dialog').remove()"
-        style="margin-top:14px;width:100%;padding:10px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:'Jost',sans-serif;font-size:13px;cursor:pointer">
-        Abbrechen
-      </button>
-    </div>`;
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
+
+  const box = document.createElement('div');
+  box.style.cssText = 'background:#1a1a1a;border:1px solid rgba(201,168,76,0.3);border-radius:16px;padding:24px;width:100%;max-width:360px';
+
+  const heading = document.createElement('div');
+  heading.style.cssText = "font-family:'Cinzel',serif;font-size:13px;color:#C9A84C;letter-spacing:2px;margin-bottom:6px";
+  heading.textContent = 'WAS MÖCHTEST DU TUN?';
+  box.appendChild(heading);
+
+  const sub = document.createElement('div');
+  sub.style.cssText = 'font-size:13px;color:#aaa;margin-bottom:14px';
+  sub.textContent = title;
+  box.appendChild(sub);
+
+  const list = document.createElement('div');
+  list.style.cssText = 'display:flex;flex-direction:column;gap:8px';
+  box.appendChild(list);
+
+  // Archivieren
+  const archBtn = document.createElement('div');
+  archBtn.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.4);border-radius:10px;cursor:pointer';
+  archBtn.innerHTML = '<span style="font-size:20px">🎬</span><div><div style="font-weight:600;color:#C9A84C;font-size:14px">Zu Mein Archiv</div><div style="font-size:11px;color:#aaa;margin-top:2px">Film direkt archivieren</div></div>';
+  archBtn.addEventListener('click', (e) => { e.stopPropagation(); overlay.remove(); quickArchive(id, title); });
+  list.appendChild(archBtn);
+
+  // Watchlisten
+  watchlists.forEach(wl => {
+    const btn = document.createElement('div');
+    btn.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#222;border:1px solid #333;border-radius:10px;cursor:pointer;color:#e0e0e0;font-size:14px';
+    btn.innerHTML = '<div style="display:flex;align-items:center;gap:8px"><span>🔖</span><span>' + esc(wl.name) + '</span></div><span style="font-size:12px;color:#888">' + wl.items.length + ' Filme</span>';
+    btn.addEventListener('click', (e) => { e.stopPropagation(); overlay.remove(); addToList(id, title, posterPath, year, wl.id); });
+    list.appendChild(btn);
+  });
+
+  // Abbrechen
+  const cancel = document.createElement('div');
+  cancel.style.cssText = 'margin-top:12px;text-align:center;padding:12px;border:1px solid #444;border-radius:8px;color:#888;font-size:13px;cursor:pointer';
+  cancel.textContent = 'Abbrechen';
+  cancel.addEventListener('click', () => overlay.remove());
+  box.appendChild(cancel);
+
+  overlay.appendChild(box);
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
   document.body.appendChild(overlay);
-  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
-  overlay.addEventListener('mousedown', e => e.stopPropagation());
-  overlay.addEventListener('touchstart', e => e.stopPropagation());
 }
+
 
 
 function addToList(id, title, posterPath, year, listId) {
