@@ -465,7 +465,7 @@ function showWatchlistPicker(id, title, posterPath, year) {
   document.getElementById('watchlist-picker-dialog')?.remove();
   const overlay = document.createElement('div');
   overlay.id = 'watchlist-picker-dialog';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
   const listButtons = watchlists.map(wl => `
     <button onclick="addToList(${id},'${esc(title)}','${posterPath}','${year}',${wl.id})"
       style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Jost',sans-serif;font-size:14px;cursor:pointer;text-align:left;width:100%"
@@ -492,6 +492,8 @@ function showWatchlistPicker(id, title, posterPath, year) {
     </div>`;
   document.body.appendChild(overlay);
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.addEventListener('mousedown', e => e.stopPropagation());
+  overlay.addEventListener('touchstart', e => e.stopPropagation());
 }
 
 
