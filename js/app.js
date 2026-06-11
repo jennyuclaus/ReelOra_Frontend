@@ -467,8 +467,9 @@ function showWatchlistPicker(id, title, posterPath, year) {
   overlay.id = 'watchlist-picker-dialog';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
   const listButtons = watchlists.map(wl => `
-    <button onclick="addToList(${id},'${esc(title)}','${posterPath}','${year}',${wl.id})"
-      style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Jost',sans-serif;font-size:14px;cursor:pointer;text-align:left;width:100%"
+    <button onclick="event.stopPropagation();addToList(${id},'${esc(title)}','${posterPath}','${year}',${wl.id})"
+      ontouchend="event.stopPropagation();event.preventDefault();addToList(${id},'${esc(title)}','${posterPath}','${year}',${wl.id})"
+      style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Jost',sans-serif;font-size:14px;cursor:pointer;text-align:left;width:100%;-webkit-tap-highlight-color:rgba(201,168,76,0.2)"
       onmouseover="this.style.borderColor='var(--gold-dim)'" onmouseout="this.style.borderColor='var(--border)'">
       <div style="display:flex;align-items:center;gap:10px"><span>🔖</span><span>${esc(wl.name)}</span></div>
       <span style="font-size:12px;color:var(--text2)">${wl.items.length} Filme</span>
@@ -478,8 +479,9 @@ function showWatchlistPicker(id, title, posterPath, year) {
       <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold);letter-spacing:2px;margin-bottom:6px">WAS MÖCHTEST DU TUN?</div>
       <div style="font-size:13px;color:var(--text2);margin-bottom:16px">${esc(title)}</div>
       <div style="display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto">
-        <button onclick="quickArchive(${id},'${esc(title)}');document.getElementById('watchlist-picker-dialog').remove()"
-          style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.4);border-radius:10px;color:var(--gold);font-family:'Jost',sans-serif;font-size:14px;cursor:pointer;text-align:left;width:100%">
+        <button onclick="event.stopPropagation();quickArchive(${id},'${esc(title)}');document.getElementById('watchlist-picker-dialog').remove()"
+          ontouchend="event.stopPropagation();event.preventDefault();quickArchive(${id},'${esc(title)}');document.getElementById('watchlist-picker-dialog').remove()"
+          style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.4);border-radius:10px;color:var(--gold);font-family:'Jost',sans-serif;font-size:14px;cursor:pointer;text-align:left;width:100%;-webkit-tap-highlight-color:rgba(201,168,76,0.2)">
           <span style="font-size:20px">🎬</span>
           <div><div style="font-weight:600">Zu Mein Archiv hinzufügen</div><div style="font-size:11px;opacity:0.7">Film direkt archivieren</div></div>
         </button>
