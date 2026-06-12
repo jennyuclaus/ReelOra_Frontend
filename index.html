@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReelOra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#C9A84C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ReelOra">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="ReelOra">
+<meta name="description" content="Deine Filmwelt. Deine Geschichten.">
+<link rel="icon" type="image/png" href="data:image/png;base64,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">
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">
+    <img src="data:image/png;base64,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" alt="ReelOra" style="width:42px;height:42px;object-fit:contain;border-radius:50%">
+    REELORA
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showFilmePage('entdecken',this)">Filme</button>
+    <button class="nav-tab" onclick="showPage('serien',this)">Serien</button>
+    <button class="nav-tab" onclick="showFilmePage('watchlist',this)">Watchlisten</button>
+    <button class="nav-tab" onclick="showFilmePage('statistiken',this)">Statistiken</button>
+    <button class="nav-tab" onclick="showPage('import',this)">Kodi Import</button>
+    <button class="nav-tab" onclick="showPage('einstellungen',this)">Einstellungen</button>
+  </div>
+  <div class="topbar-right">
+    <div id="drive-indicator" style="display:none"></div>
+    <img src="data:image/png;base64,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" alt="ReelOra"
+      onclick="showPage('einstellungen',document.querySelectorAll('.nav-tab')[4])"
+      title="Einstellungen"
+      style="width:38px;height:38px;object-fit:contain;border-radius:50%;cursor:pointer;opacity:0.85;transition:opacity 0.2s"
+      onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.85'"
+      id="user-avatar">
+  </div>
+</div>
+
+
+
+<!-- FILME (Bibliothek) -->
+<div id="page-bibliothek" class="page active">
+  <!-- Sub-Navigation wie bei Serien -->
+  <div style="display:flex;gap:4px;margin-bottom:24px;border-bottom:1px solid var(--border);padding-bottom:0">
+    <button class="tab-sec active" id="ftab-entdecken" onclick="showFilmeTab('entdecken',this)">Entdecken</button>
+    <button class="tab-sec" id="ftab-archiv" onclick="showFilmeTab('archiv',this)">Mein Archiv</button>
+    <button class="tab-sec" id="ftab-watchlist" onclick="showFilmeTab('watchlist',this)">Watchlist</button>
+
+  </div>
+
+  <!-- ENTDECKEN TAB -->
+  <div id="filme-tab-entdecken">
+    <div class="search-bar">
+      <div style="flex:1;position:relative;isolation:isolate">
+        <input class="search-input" id="search-input" placeholder="Film suchen..."
+          autocomplete="off" style="width:100%;padding-right:36px">
+        <button onclick="clearSearch('search-input','movie')" id="clear-movie-btn"
+          style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer;line-height:1;padding:4px">✕</button>
+        <div id="autocomplete-movie" class="autocomplete-dropdown" style="display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:9999"></div>
+      </div>
+      <button class="btn-gold" onclick="searchMovies()">SUCHEN</button>
+    </div>
+    <div class="filter-row" id="filter-row">
+      <button class="filter-btn active" onclick="setFilter('all',this)">Alle</button>
+      <button class="filter-btn" onclick="setFilter('action',this)">Action</button>
+      <button class="filter-btn" onclick="setFilter('drama',this)">Drama</button>
+      <button class="filter-btn" onclick="setFilter('scifi',this)">Sci-Fi</button>
+      <button class="filter-btn" onclick="setFilter('thriller',this)">Thriller</button>
+      <button class="filter-btn" onclick="setFilter('horror',this)">Horror</button>
+      <button class="filter-btn" onclick="setFilter('animation',this)">Animation</button>
+    </div>
+    <div class="search-loading" id="search-loading"><div class="spinner"></div> Suche in TMDB...</div>
+    <div id="search-results-section" style="display:none">
+      <div class="section-title" id="search-results-title">SUCHERGEBNISSE</div>
+      <div class="movie-grid" id="search-results"></div>
+      <div class="divider"></div>
+    </div>
+    <div class="section-title">EMPFOHLEN FÜR DICH</div>
+    <div class="movie-grid" id="trending-grid"></div>
+    <div class="section-title" style="margin-top:32px">ZULETZT ARCHIVIERT</div>
+    <div class="movie-grid" id="recent-archive-grid"></div>
+  </div>
+
+  <!-- ARCHIV TAB -->
+  <div id="filme-tab-archiv" style="display:none">
+    <div class="library-controls">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div class="view-toggle">
+          <button class="vt-btn active" id="view-grid-btn" onclick="setLibView('grid')">⊞ Raster</button>
+          <button class="vt-btn" id="view-list-btn" onclick="setLibView('list')">☰ Liste</button>
+        </div>
+        <select id="sort-select" onchange="renderLibrary()">
+          <option value="added">Nach Hinzugefügt</option>
+          <option value="rating">Nach Bewertung</option>
+          <option value="year">Nach Jahr</option>
+          <option value="title">Nach Titel</option>
+        </select>
+        <input class="search-input" id="lib-search" placeholder="Archiv durchsuchen..." style="width:200px" oninput="renderLibrary()">
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-outline" id="delete-mode-btn" onclick="toggleDeleteMode()">🗑 Auswählen</button>
+        <button class="btn-outline" onclick="exportLibrary()">↓ Export</button>
+      </div>
+    </div>
+    <div id="bulk-delete-bar" style="display:none;align-items:center;justify-content:space-between;background:rgba(224,82,82,0.08);border:1px solid rgba(224,82,82,0.3);border-radius:10px;padding:12px 16px;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span id="bulk-delete-label" style="font-size:13px;color:var(--text2)">Filme zum Löschen auswählen</span>
+        <button id="select-all-btn" onclick="selectAllFilms()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:'Jost',sans-serif;font-size:12px;cursor:pointer">Alle auswählen</button>
+      </div>
+      <button id="bulk-delete-confirm-btn" onclick="bulkDeleteSelected()" style="display:none;padding:8px 20px;border-radius:8px;border:1px solid var(--red);background:rgba(224,82,82,0.15);color:var(--red);font-family:'Cinzel',serif;font-size:12px;letter-spacing:1px;cursor:pointer;font-weight:600">AUSGEWÄHLTE LÖSCHEN</button>
+    </div>
+    <div class="filter-row" id="lib-filter-row">
+      <button class="filter-btn active" onclick="setLibFilter('all',this)">Alle</button>
+      <button class="filter-btn" onclick="setLibFilter('gesehen',this)">Bewertet</button>
+      <button class="filter-btn" onclick="setLibFilter('favoriten',this)">Favoriten ★</button>
+    </div>
+    <div id="library-container"></div>
+  </div>
+
+  <!-- WATCHLIST TAB -->
+  <div id="filme-tab-watchlist" style="display:none">
+
+    <!-- FILM-LISTEN -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div class="section-title" style="margin:0">🎬 FILM-LISTEN</div>
+      <button class="btn-outline" onclick="toggleNewListForm()">+ Neue Liste</button>
+    </div>
+    <div class="new-list-form" id="new-list-form">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:8px">Listenname</div>
+      <div class="form-row">
+        <input class="search-input" id="new-list-name-settings" placeholder="z.B. Must-Watch 2024...">
+        <button class="btn-gold" onclick="createNewListFromSettings()">Erstellen</button>
+      </div>
+    </div>
+    <div id="watchlist-container"></div>
+
+    <div class="divider" style="margin:28px 0"></div>
+
+    <!-- SERIEN-LISTEN -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div class="section-title" style="margin:0">📺 SERIEN-LISTEN</div>
+      <button class="btn-outline" onclick="toggleNewSeriesListForm()">+ Neue Liste</button>
+    </div>
+    <div class="new-list-form" id="new-series-list-form-inline">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:8px">Listenname</div>
+      <div class="form-row">
+        <input class="search-input" id="new-series-list-name-inline" placeholder="z.B. Muss ich schauen...">
+        <button class="btn-gold" onclick="createNewSeriesListInline()">Erstellen</button>
+      </div>
+    </div>
+    <div id="series-watchlist-combined-container"></div>
+
+  </div>
+
+  <!-- STATISTIKEN TAB -->
+  <div id="filme-tab-statistiken" style="display:none">
+    <div class="stats-grid" id="filme-stats-cards"></div>
+    <div class="two-col">
+      <div class="chart-area">
+        <div class="chart-title">Filme pro Monat</div>
+        <div class="bar-chart" id="monthly-chart"></div>
+      </div>
+      <div class="chart-area">
+        <div class="chart-title">Lieblingsgenres</div>
+        <div class="genre-list" id="genre-chart"></div>
+      </div>
+    </div>
+    <div class="chart-area" style="margin-top:16px">
+      <div class="chart-title">Archivierte Filme nach Jahrzehnt</div>
+      <div class="bar-chart" id="decade-chart"></div>
+    </div>
+    <div style="margin-top:24px">
+      <div class="section-title">TOP BEWERTUNGEN</div>
+      <div id="top-rated-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SERIEN -->
+<div id="page-serien" class="page">
+  <div style="display:flex;gap:4px;margin-bottom:24px;border-bottom:1px solid var(--border);padding-bottom:0">
+    <button class="tab-sec active" id="stab-entdecken" onclick="showSerienTab('entdecken',this)">Entdecken</button>
+    <button class="tab-sec" id="stab-archiv" onclick="showSerienTab('archiv',this)">Mein Archiv</button>
+    <button class="tab-sec" id="stab-watchlist" onclick="showSerienTab('watchlist',this)">Watchlist</button>
+    <button class="tab-sec" id="stab-fortschritt" onclick="showSerienTab('fortschritt',this)">Fortschritt</button>
+  </div>
+  <div id="serien-tab-entdecken">
+    <div class="search-bar">
+      <div style="flex:1;position:relative;isolation:isolate">
+        <input class="search-input" id="series-search-input" placeholder="Serie suchen..."
+          autocomplete="off" style="width:100%;padding-right:36px">
+        <button onclick="clearSearch('series-search-input','tv')" id="clear-tv-btn"
+          style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer;line-height:1;padding:4px">✕</button>
+        <div id="autocomplete-tv" class="autocomplete-dropdown" style="display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:9999"></div>
+      </div>
+      <button class="btn-gold" onclick="searchSeries()">SUCHEN</button>
+    </div>
+    <div class="filter-row" id="series-filter-row">
+      <button class="filter-btn active" onclick="setSeriesFilter('all',this)">Alle</button>
+      <button class="filter-btn" onclick="setSeriesFilter('drama',this)">Drama</button>
+      <button class="filter-btn" onclick="setSeriesFilter('action',this)">Action</button>
+      <button class="filter-btn" onclick="setSeriesFilter('comedy',this)">Komödie</button>
+      <button class="filter-btn" onclick="setSeriesFilter('scifi',this)">Sci-Fi</button>
+      <button class="filter-btn" onclick="setSeriesFilter('crime',this)">Krimi</button>
+      <button class="filter-btn" onclick="setSeriesFilter('animation',this)">Animation</button>
+    </div>
+    <div class="search-loading" id="series-search-loading"><div class="spinner"></div> Suche in TMDB...</div>
+    <div id="series-search-results-section" style="display:none">
+      <div class="section-title" id="series-search-results-title">SUCHERGEBNISSE</div>
+      <div class="movie-grid" id="series-search-results"></div>
+      <div class="divider"></div>
+    </div>
+    <div class="section-title">TRENDING SERIEN</div>
+    <div class="movie-grid" id="trending-series-grid"></div>
+  </div>
+  <div id="serien-tab-archiv" style="display:none">
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;justify-content:space-between">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <select id="series-sort-select" onchange="renderSeriesArchive()">
+          <option value="added">Nach Hinzugefügt</option>
+          <option value="rating">Nach Bewertung</option>
+          <option value="title">Nach Titel</option>
+          <option value="progress">Nach Fortschritt</option>
+        </select>
+        <input class="search-input" id="series-lib-search" placeholder="Serien durchsuchen..." style="width:200px" oninput="renderSeriesArchive()">
+      </div>
+    </div>
+    <div class="filter-row">
+      <button class="filter-btn active" onclick="setSeriesArchiveFilter('all',this)">Alle</button>
+      <button class="filter-btn" onclick="setSeriesArchiveFilter('watching',this)">Am Schauen</button>
+      <button class="filter-btn" onclick="setSeriesArchiveFilter('completed',this)">Abgeschlossen</button>
+      <button class="filter-btn" onclick="setSeriesArchiveFilter('paused',this)">Pausiert</button>
+      <button class="filter-btn" onclick="setSeriesArchiveFilter('planned',this)">Geplant</button>
+    </div>
+    <div id="series-archive-container"></div>
+  </div>
+  <div id="serien-tab-watchlist" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div class="section-title" style="margin:0">MEINE SERIEN-LISTEN</div>
+      <button class="btn-outline" onclick="toggleNewSeriesListForm()">+ Neue Liste</button>
+    </div>
+    <div class="new-list-form" id="new-series-list-form">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:8px">Listenname</div>
+      <div class="form-row">
+        <input class="search-input" id="new-series-list-name" placeholder="z.B. Muss ich schauen...">
+        <button class="btn-gold" onclick="createNewSeriesList()">Erstellen</button>
+      </div>
+    </div>
+    <div id="series-watchlist-container"></div>
+  </div>
+  <div id="serien-tab-fortschritt" style="display:none">
+    <div class="stats-grid" id="series-stats-cards"></div>
+    <div class="section-title" style="margin-top:8px">AKTUELL AM SCHAUEN</div>
+    <div id="series-currently-watching"></div>
+    <div class="section-title" style="margin-top:24px">ZULETZT ABGESCHLOSSEN</div>
+    <div id="series-recently-completed"></div>
+  </div>
+</div>
+
+
+
+
+
+<!-- STATISTIKEN -->
+<div id="page-statistiken" class="page">
+  <div class="stats-grid" id="stats-cards"></div>
+  <div class="two-col">
+    <div class="chart-area"><div class="chart-title">Filme pro Monat</div><div class="bar-chart" id="monthly-chart"></div></div>
+    <div class="chart-area"><div class="chart-title">Lieblingsgenres</div><div class="genre-list" id="genre-chart"></div></div>
+  </div>
+  <div class="chart-area" style="margin-top:16px">
+    <div class="chart-title">Archivierte Filme nach Jahrzehnt</div>
+    <div class="bar-chart" id="decade-chart"></div>
+  </div>
+  <div style="margin-top:24px">
+    <div class="section-title">TOP BEWERTUNGEN</div>
+    <div id="top-rated-list"></div>
+  </div>
+</div>
+
+<!-- KODI IMPORT -->
+<div id="page-import" class="page">
+  <div class="settings-section" style="margin-bottom:20px">
+    <div class="settings-title">KODI NETZWERK-VERBINDUNG</div>
+    <div class="setting-row">
+      <div><div class="setting-label">Kodi IP-Adresse</div><div class="setting-sub">z.B. 192.168.1.100</div></div>
+      <input class="setting-input" id="kodi-host" placeholder="192.168.1.100" oninput="saveKodiSettings()">
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Port</div><div class="setting-sub">Standard: 8080</div></div>
+      <input class="setting-input" id="kodi-port" placeholder="8080" value="8080" style="width:100px" oninput="saveKodiSettings()">
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Benutzername</div><div class="setting-sub">Leer lassen falls kein Login</div></div>
+      <input class="setting-input" id="kodi-user" placeholder="kodi" oninput="saveKodiSettings()">
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Passwort</div></div>
+      <input class="setting-input" id="kodi-pass" type="password" placeholder="••••••" oninput="saveKodiSettings()">
+    </div>
+    <div class="setting-row" style="border:none;padding-bottom:0">
+      <div><div class="setting-label">Verbindung testen</div><div class="setting-sub" id="kodi-conn-sub">Noch nicht verbunden</div></div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <div id="kodi-conn-badge" class="drive-status disconnected"><div class="dot gray"></div>Getrennt</div>
+        <button class="btn-outline" onclick="testKodiConnection()">Verbinden</button>
+      </div>
+    </div>
+  </div>
+  <div id="kodi-import-panel" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <div class="section-title" style="margin:0">KODI BIBLIOTHEK</div>
+      <div style="display:flex;gap:10px">
+        <button class="btn-outline" onclick="loadKodiLibrary()">↻ Neu laden</button>
+        <button class="btn-gold" id="kodi-import-all-btn" onclick="importAllKodiMovies()" style="display:none">ALLE IMPORTIEREN</button>
+      </div>
+    </div>
+    <div class="search-bar" style="margin-bottom:16px">
+      <input class="search-input" id="kodi-filter-input" placeholder="Kodi-Bibliothek filtern..." oninput="filterKodiMovies()">
+    </div>
+    <div id="kodi-load-status" class="search-loading"><div class="spinner"></div> Lade Kodi-Bibliothek...</div>
+    <div id="kodi-movie-list"></div>
+  </div>
+  <div class="divider"></div>
+  <div class="section-title">DATEI-IMPORT</div>
+  <div class="import-zone" onclick="document.getElementById('kodi-file-input').click()">
+    <div class="import-icon">📂</div>
+    <div class="import-title">NFO / XML DATEIEN</div>
+    <div class="import-sub">Kodi NFO-Dateien (.nfo) oder XML-Exporte auswählen</div>
+  </div>
+  <input type="file" id="kodi-file-input" accept=".nfo,.xml,.json" multiple onchange="handleKodiImport(event)">
+  <div style="margin-bottom:20px">
+    <div class="section-title">MANUELL EINGEBEN</div>
+    <div class="search-bar" style="margin-bottom:0">
+      <input class="search-input" id="manual-import-input" placeholder="Filmtitel eingeben (ein Titel pro Zeile)...">
+      <button class="btn-gold" onclick="manualImport()">IMPORTIEREN</button>
+    </div>
+    <div style="font-size:12px;color:var(--text3);margin-top:8px">Mehrere Titel durch Zeilenumbrüche trennen.</div>
+  </div>
+  <div class="import-results" id="import-results">
+    <div style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:2px;color:var(--gold);margin-bottom:14px">IMPORT-VORSCHAU</div>
+    <div id="import-items-list"></div>
+    <div style="margin-top:16px;display:flex;gap:10px">
+      <button class="btn-gold" onclick="confirmImport()">ALLE ARCHIVIEREN</button>
+      <button class="btn-outline" onclick="clearImport()">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<!-- EINSTELLUNGEN -->
+<div id="page-einstellungen" class="page">
+  <div class="settings-section">
+    <div class="settings-title">TMDB API</div>
+    <div class="setting-row">
+      <div><div class="setting-label">API Key</div><div class="setting-sub">Kostenlos unter <a href="https://www.themoviedb.org/settings/api" target="_blank" style="color:var(--gold)">themoviedb.org/settings/api</a></div></div>
+      <input class="setting-input" id="tmdb-key-input" type="password" placeholder="API Key eingeben..." oninput="saveTMDBKey(this.value)">
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Sprache</div></div>
+      <select id="lang-select" onchange="saveLang(this.value)">
+        <option value="de-DE">Deutsch</option>
+        <option value="en-US">English</option>
+        <option value="fr-FR">Français</option>
+      </select>
+    </div>
+    <div class="setting-row" id="api-status-row" style="display:none">
+      <div><div class="setting-label">API Status</div></div>
+      <div style="font-size:13px;color:var(--green)">✓ Key gespeichert</div>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-title">GOOGLE DRIVE SYNCHRONISATION</div>
+    <div class="setting-row">
+      <div><div class="setting-label">Vercel Backend-URL</div><div class="setting-sub">z.B. https://reelora.vercel.app</div></div>
+      <input class="setting-input" id="vercel-url-input" type="text" placeholder="https://dein-projekt.vercel.app" oninput="saveVercelUrl(this.value)">
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Verbindungsstatus</div><div class="setting-sub" id="drive-account-sub">Nicht verbunden</div></div>
+      <div id="drive-status-badge" class="drive-status disconnected"><div class="dot gray"></div>Nicht verbunden</div>
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Speicherort</div><div class="setting-sub">Dateien in deinem Google Drive</div></div>
+      <div style="font-family:'Jost',sans-serif;font-size:13px;color:var(--gold);background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:6px 14px">📁 MeineApps / ReelOra</div>
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Mit Google Drive verbinden</div><div class="setting-sub">Speichert library.json, series.json, watchlists.json</div></div>
+      <button class="btn-outline" id="drive-connect-btn" onclick="connectGoogleDrive()">Mit Google anmelden</button>
+    </div>
+    <div class="setting-row" id="drive-sync-row" style="display:none">
+      <div><div class="setting-label">Automatisch synchronisieren</div><div class="setting-sub">Bei jeder Änderung speichern</div></div>
+      <div class="toggle on" id="auto-sync-toggle" onclick="this.classList.toggle('on')"></div>
+    </div>
+    <div class="setting-row" id="drive-manual-row" style="display:none">
+      <div><div class="setting-label">Jetzt synchronisieren</div><div class="setting-sub" id="last-sync-sub">Noch nie synchronisiert</div></div>
+      <button class="btn-outline" onclick="manualSync()">↑↓ Sync</button>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-title">KODI VERBINDUNG</div>
+    <div class="setting-row">
+      <div><div class="setting-label">IP-Adresse</div></div>
+      <input class="setting-input" id="kodi-host-settings" placeholder="192.168.1.100" oninput="saveKodiSettings()">
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Port</div></div>
+      <input class="setting-input" id="kodi-port-settings" placeholder="8080" style="width:100px" oninput="saveKodiSettings()">
+    </div>
+    <div class="setting-row" style="border:none">
+      <div><div class="setting-label">Direktlink zum Import</div></div>
+      <button class="btn-outline" onclick="showPage('import', document.querySelectorAll('.nav-tab')[3])">→ Kodi Import öffnen</button>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-title">ANZEIGE</div>
+    <div class="setting-row">
+      <div><div class="setting-label">Poster automatisch laden</div></div>
+      <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+    </div>
+    <div class="setting-row" style="border:none">
+      <div><div class="setting-label">Erwachsene Inhalte</div></div>
+      <div class="toggle" onclick="this.classList.toggle('on')"></div>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-title">DATEN</div>
+    <div class="setting-row">
+      <div><div class="setting-label">Bibliothek exportieren</div><div class="setting-sub">Als JSON herunterladen</div></div>
+      <button class="btn-outline" onclick="exportLibrary()">↓ JSON Export</button>
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Backup importieren</div><div class="setting-sub">Vorherige ReelOra-Sicherung laden</div></div>
+      <button class="btn-outline" onclick="document.getElementById('restore-file').click()">↑ JSON Import</button>
+    </div>
+    <div class="setting-row" style="border:none">
+      <div><div class="setting-label">Alle Daten löschen</div><div class="setting-sub" style="color:var(--red)">Unwiderruflich</div></div>
+      <button onclick="clearAll()" class="btn-danger">Alles löschen</button>
+    </div>
+  </div>
+  <input type="file" id="restore-file" accept=".json" onchange="importBackup(event)" style="display:none">
+</div>
+
+<!-- FILM DETAIL MODAL -->
+<div class="modal-overlay" id="movie-modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <img id="modal-backdrop-img" src="" alt="" style="display:none">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div class="modal-header-overlay">
+        <div class="modal-title" id="modal-title"></div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-meta-row" id="modal-meta"></div>
+      <p class="modal-overview" id="modal-overview"></p>
+      <div style="margin-bottom:16px">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:8px;letter-spacing:1px;text-transform:uppercase">Deine Bewertung</div>
+        <div class="modal-rating-stars" id="modal-stars"></div>
+      </div>
+      <textarea class="modal-note" id="modal-note" placeholder="Persönliche Notiz zum Film..."></textarea>
+      <div class="modal-actions" id="modal-actions" style="margin-top:16px"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="js/app.js"></script>
+<script src="js/series.js"></script>
+
+<!-- PWA Install Banner -->
+<div id="pwa-banner" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid rgba(201,168,76,0.4);border-radius:14px;padding:14px 20px;z-index:500;display:none;align-items:center;gap:14px;box-shadow:0 8px 32px rgba(0,0,0,0.5);max-width:340px;width:calc(100% - 32px)">
+  <img src="logo.png" style="width:40px;height:40px;border-radius:8px">
+  <div style="flex:1">
+    <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold);letter-spacing:1px">REELORA INSTALLIEREN</div>
+    <div style="font-size:12px;color:var(--text2);margin-top:2px">Als App auf dem Homescreen</div>
+  </div>
+  <button id="pwa-install-btn" style="padding:8px 16px;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:8px;color:#0A0A0A;font-family:'Cinzel',serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">Installieren</button>
+  <button onclick="document.getElementById('pwa-banner').style.display='none'" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:18px;padding:0 4px">×</button>
+</div>
+
+<script>
+// Service Worker registrieren
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').then(reg => {
+      console.log('ReelOra SW registered:', reg.scope);
+    }).catch(err => console.log('SW error:', err));
+  });
+
+  // Background Sync für Drive
+  navigator.serviceWorker.addEventListener('message', event => {
+    if (event.data?.type === 'SYNC_DRIVE' && typeof driveSync === 'function') {
+      driveSync();
+    }
+  });
+}
+
+// PWA Install Prompt abfangen
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Banner nach 3 Sekunden zeigen
+  setTimeout(() => {
+    const banner = document.getElementById('pwa-banner');
+    if (banner) banner.style.display = 'flex';
+  }, 3000);
+});
+
+document.getElementById('pwa-install-btn')?.addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById('pwa-banner').style.display = 'none';
+  if (outcome === 'accepted') {
+    setTimeout(() => toast('✓ ReelOra wurde installiert!'), 500);
+  }
+});
+
+// Wenn bereits als PWA installiert → Banner nie zeigen
+window.addEventListener('appinstalled', () => {
+  document.getElementById('pwa-banner').style.display = 'none';
+  deferredPrompt = null;
+});
+</script>
+</body>
+</html>
