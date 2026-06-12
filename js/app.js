@@ -18,7 +18,6 @@ let settings = JSON.parse(localStorage.getItem('reelora_settings') || JSON.strin
 let currentMovie = null, libView = 'grid', libFilter = 'all';
 let importQueue = [], trendingCache = [], searchCache = [], toastTimer = null;
 let deleteMode = false, selectedForDelete = new Set();
-let kodiMoviesCache = [], kodiMoviesFiltered = [];
 
 // ─── INIT ────────────────────────────────────────────────────
 window.addEventListener('load', () => {
@@ -34,7 +33,6 @@ window.addEventListener('load', () => {
   }
   const lang = document.getElementById('lang-select');
   if (lang) lang.value = settings.lang || 'de-DE';
-  syncKodiFields();
   updateDriveUI();
   // Serien-Listen aus localStorage laden
   window.seriesNamedLists = JSON.parse(localStorage.getItem('reelora_series_lists') || '[]');
@@ -838,19 +836,7 @@ function renderStats() {
   }).join('') || '<div style="color:var(--text3);font-size:13px;padding:20px 0;text-align:center">Noch keine bewerteten Filme</div>';
 }
 
-// ─── KODI IMPORT ─────────────────────────────────────────────
-async function handleKodiImport(event) {
-  const files = Array.from(event.target.files); if (!files.length) return;
-  importQueue = [];
-  for (const file of files) {
-    const text = await file.text();
-    const titleMatch = text.match(/<title>(.*?)<\/title>/i) || text.match(/"title"\s*:\s*"([^"]+)"/);
-    const yearMatch  = text.match(/<year>(\d{4})<\/year>/i) || text.match(/\((\d{4})\)/);
-    if (titleMatch) importQueue.push({title:(titleMatch[1]||'').trim(),year:yearMatch?yearMatch[1]:'',status:'wait',source:file.name});
-  }
-  document.getElementById('import-results').classList.add('visible'); renderImportQueue();
-}
-
+// ─── DATEI-IMPORT ────────────────────────────────────────────
 async function manualImport() {
   const input = document.getElementById('manual-import-input').value.trim(); if (!input) return;
   importQueue = input.split('\n').map(t=>t.trim()).filter(Boolean).map(title=>({title,year:'',status:'wait',source:'manuell'}));
@@ -876,6 +862,15 @@ async function confirmImport() {
 }
 
 function clearImport() { importQueue=[]; document.getElementById('import-results').classList.remove('visible'); document.getElementById('import-items-list').innerHTML=''; document.getElementById('manual-import-input').value=''; }
+
+function toggleManualImportPanel() {
+  const panel = document.getElementById('manual-import-panel');
+  const btn   = document.querySelector('[onclick*="toggleManualImportPanel"]');
+  if (!panel) return;
+  const open = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : 'block';
+  if (btn) btn.textContent = open ? '+ Öffnen' : '✕ Schließen';
+}
 
 // ─── EINSTELLUNGEN ───────────────────────────────────────────
 function saveTMDBKey(val) { settings.tmdb_key=val.trim(); save(); document.getElementById('api-status-row').style.display=val?'flex':'none'; }
@@ -1010,121 +1005,6 @@ function clearAll() {
   save(); renderLibrary(); renderWatchlists(); renderStats(); renderRecentArchive(); toast('Alle Daten gelöscht');
 }
 
-// ─── KODI NETZWERK ───────────────────────────────────────────
-function saveKodiSettings() {
-  settings.kodi_host=document.getElementById('kodi-host')?.value.trim()||document.getElementById('kodi-host-settings')?.value.trim()||'';
-  settings.kodi_port=document.getElementById('kodi-port')?.value.trim()||'8080';
-  settings.kodi_user=document.getElementById('kodi-user')?.value.trim()||'';
-  settings.kodi_pass=document.getElementById('kodi-pass')?.value||'';
-  save(); syncKodiFields();
-}
-
-function syncKodiFields() {
-  const h=settings.kodi_host||'',p=settings.kodi_port||'8080',u=settings.kodi_user||'';
-  ['kodi-host','kodi-host-settings'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=h;});
-  ['kodi-port','kodi-port-settings'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=p;});
-  const ku=document.getElementById('kodi-user'); if(ku) ku.value=u;
-}
-
-function loadKodiSettingsIntoFields() { syncKodiFields(); if(settings.kodi_host) document.getElementById('kodi-import-panel').style.display='block'; }
-
-async function kodiRPC(method,params={}) {
-  const host=settings.kodi_host,port=settings.kodi_port||'8080',user=settings.kodi_user,pass=settings.kodi_pass;
-  if(!host) throw new Error('Keine Kodi-IP konfiguriert');
-  const headers={'Content-Type':'application/json'}; if(user) headers['Authorization']='Basic '+btoa(user+':'+(pass||''));
-  const ctrl=new AbortController(),timeout=setTimeout(()=>ctrl.abort(),8000);
-  try {
-    const res=await fetch(`http://${host}:${port}/jsonrpc`,{method:'POST',headers,body:JSON.stringify({jsonrpc:'2.0',method,params,id:Date.now()}),signal:ctrl.signal});
-    clearTimeout(timeout); if(!res.ok) throw new Error('HTTP '+res.status);
-    const data=await res.json(); if(data.error) throw new Error(data.error.message); return data.result;
-  } catch(e){clearTimeout(timeout);if(e.name==='AbortError')throw new Error('Zeitüberschreitung');throw e;}
-}
-
-async function testKodiConnection() {
-  saveKodiSettings();
-  const badge=document.getElementById('kodi-conn-badge'),sub=document.getElementById('kodi-conn-sub');
-  if(badge){badge.className='drive-status disconnected';badge.innerHTML='<div class="dot gray"></div>Verbinde...';}
-  try {
-    const result=await kodiRPC('Application.GetProperties',{properties:['name','version']});
-    const name=result?.name||'Kodi',ver=result?.version?.major?`v${result.version.major}.${result.version.minor}`:'';
-    if(badge){badge.className='drive-status connected';badge.innerHTML='<div class="dot green"></div>Verbunden';}
-    if(sub) sub.textContent=`${name} ${ver}`;
-    document.getElementById('kodi-import-panel').style.display='block';
-    settings.kodi_connected=true; save(); toast('✓ Kodi verbunden: '+name+' '+ver); loadKodiLibrary();
-  } catch(e) {
-    if(badge){badge.className='drive-status disconnected';badge.innerHTML='<div class="dot" style="background:var(--red)"></div>Fehler';}
-    if(sub) sub.textContent=e.message; toast('✗ '+e.message,'err');
-  }
-}
-
-async function loadKodiLibrary() {
-  const statusEl=document.getElementById('kodi-load-status'),listEl=document.getElementById('kodi-movie-list'),importBtn=document.getElementById('kodi-import-all-btn');
-  if(statusEl) statusEl.classList.add('visible'); if(listEl) listEl.innerHTML=''; if(importBtn) importBtn.style.display='none';
-  try {
-    const result=await kodiRPC('VideoLibrary.GetMovies',{properties:['title','year','rating','playcount','genre','runtime','plot','thumbnail','imdbnumber','originaltitle','file'],limits:{start:0,end:10000},sort:{order:'ascending',method:'title'}});
-    if(statusEl) statusEl.classList.remove('visible');
-    const movies=result?.movies||[];
-    if(!movies.length){if(listEl)listEl.innerHTML='<div class="empty-state"><div class="empty-icon">🎬</div><div class="empty-title">KEINE FILME</div></div>';return;}
-    kodiMoviesCache=kodiMoviesFiltered=movies; renderKodiMovieList(movies);
-    if(importBtn) importBtn.style.display='inline-block'; toast(`✓ ${movies.length} Filme geladen`);
-  } catch(e) {
-    if(statusEl) statusEl.classList.remove('visible');
-    if(listEl) listEl.innerHTML=`<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">FEHLER</div><div class="empty-sub">${esc(e.message)}</div></div>`;
-    toast('Kodi Fehler: '+e.message,'err');
-  }
-}
-
-function renderKodiMovieList(movies) {
-  const listEl=document.getElementById('kodi-movie-list'); if(!listEl) return;
-  const archived=movies.filter(m=>library.some(l=>l.title.toLowerCase()===(m.title||'').toLowerCase())).length;
-  listEl.innerHTML=`<div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap">
-    <div class="stat-card" style="flex:1;min-width:120px;padding:14px"><div class="stat-val" style="font-size:24px">${movies.length}</div><div class="stat-label">Kodi Filme</div></div>
-    <div class="stat-card" style="flex:1;min-width:120px;padding:14px"><div class="stat-val" style="font-size:24px;color:var(--green)">${archived}</div><div class="stat-label">Archiviert</div></div>
-    <div class="stat-card" style="flex:1;min-width:120px;padding:14px"><div class="stat-val" style="font-size:24px;color:var(--gold)">${movies.length-archived}</div><div class="stat-label">Neu</div></div>
-  </div><div class="lib-list">${movies.map(m=>renderKodiMovieRow(m)).join('')}</div>`;
-}
-
-function renderKodiMovieRow(m) {
-  const title=m.title||m.originaltitle||'Unbekannt',year=m.year||'',genres=(m.genre||[]).slice(0,3).join(', '),runtime=m.runtime?Math.floor(m.runtime/60)+'h '+(m.runtime%60)+'m':'';
-  const isArch=library.some(l=>l.title.toLowerCase()===title.toLowerCase());
-  return `<div class="lib-item" id="kodi-row-${m.movieid}"><div class="lib-poster">🎬</div><div class="lib-info"><div class="lib-title">${esc(title)}</div><div class="lib-meta">${year}${runtime?' · '+runtime:''}${genres?' · '+genres:''}</div><div class="lib-tags">${m.playcount>0?'<span class="tag green">✓ Gesehen</span>':'<span class="tag">Nicht gesehen</span>'}${isArch?'<span class="tag gold">✓ Archiviert</span>':''}</div></div>${isArch?'<span style="font-size:11px;color:var(--green);padding:6px">✓</span>':`<button class="btn-outline" style="font-size:11px;padding:6px 12px" onclick="importSingleKodiMovie(${m.movieid})">+ Importieren</button>`}</div>`;
-}
-
-async function importSingleKodiMovie(kodiId) {
-  const movie=kodiMoviesCache.find(m=>m.movieid===kodiId); if(!movie) return;
-  await archiveKodiMovie(movie);
-  const row=document.getElementById('kodi-row-'+kodiId); if(row) row.outerHTML=renderKodiMovieRow(movie);
-  save(); renderLibrary(); renderStats();
-}
-
-async function importAllKodiMovies() {
-  const toImport=kodiMoviesFiltered.filter(m=>!library.some(l=>l.title.toLowerCase()===(m.title||'').toLowerCase()));
-  if(!toImport.length){toast('Alle Filme bereits archiviert');return;}
-  let count=0;
-  for(const m of toImport){await archiveKodiMovie(m);count++;if(count%10===0)toast(`${count}/${toImport.length} importiert...`);}
-  save(); renderKodiMovieList(kodiMoviesFiltered); renderLibrary(); renderStats(); renderRecentArchive(); toast(`✓ ${count} Filme importiert`);
-}
-
-async function archiveKodiMovie(m) {
-  const title=m.title||m.originaltitle||'';
-  let poster='',genres=m.genre||[],overview=m.plot||'',runtime=m.runtime||0,tmdbId=null;
-  if(settings.tmdb_key&&title){
-    try{const res=await tmdbFetch('/search/movie',`&query=${encodeURIComponent(title)}&year=${m.year||''}&include_adult=false`);if(res?.results?.[0]){const t=res.results[0];tmdbId=t.id;poster=t.poster_path||'';if(!overview)overview=t.overview||'';if(!genres.length&&t.genre_ids)genres=t.genre_ids.map(id=>tmdbGenreName(id)).filter(Boolean);}await new Promise(r=>setTimeout(r,150));}catch(_){}
-  }
-  const entry={tmdb_id:tmdbId||('kodi_'+(m.movieid||Date.now())),title,year:String(m.year||''),poster_path:poster,overview,rating:m.rating?Math.round(m.rating/2):0,note:m.playcount>0?'▶ In Kodi gesehen':'',added:Date.now(),genres,runtime,kodi_id:m.movieid,source:'kodi'};
-  const idx=library.findIndex(l=>l.tmdb_id===entry.tmdb_id||l.title.toLowerCase()===title.toLowerCase());
-  if(idx>=0) library[idx]={...library[idx],...entry}; else library.unshift(entry);
-}
-
-function filterKodiMovies() {
-  const q=(document.getElementById('kodi-filter-input')?.value||'').toLowerCase();
-  kodiMoviesFiltered=q?kodiMoviesCache.filter(m=>(m.title||'').toLowerCase().includes(q)||String(m.year||'').includes(q)||(m.genre||[]).some(g=>g.toLowerCase().includes(q))):[...kodiMoviesCache];
-  renderKodiMovieList(kodiMoviesFiltered);
-}
-
-function tmdbGenreName(id) {
-  return {28:'Action',12:'Abenteuer',16:'Animation',35:'Komödie',80:'Krimi',99:'Dokumentation',18:'Drama',10751:'Familie',14:'Fantasy',36:'Geschichte',27:'Horror',10402:'Musik',9648:'Mystery',10749:'Romanze',878:'Science-Fiction',53:'Thriller',10752:'Kriegsfilm',37:'Western'}[id]||'';
-}
 
 // ─── CLEAR SEARCH ────────────────────────────────────────
 function clearSearch(inputId, type) {
