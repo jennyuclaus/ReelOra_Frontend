@@ -353,22 +353,27 @@
   <div class="settings-section">
     <div class="settings-title">DATEN</div>
     <div class="setting-row">
-      <div><div class="setting-label">Filme manuell importieren</div><div class="setting-sub">Filmtitel eingeben (ein Titel pro Zeile)</div></div>
-      <button class="btn-outline" onclick="toggleManualImportPanel()">+ Öffnen</button>
+      <div><div class="setting-label">NFO / XML Dateien importieren</div><div class="setting-sub">Kodi NFO-Dateien oder XML-Exporte</div></div>
+      <button class="btn-outline" onclick="document.getElementById('nfo-file-input').click()">📂 Auswählen</button>
     </div>
-    <div id="manual-import-panel" style="display:none;padding:0 0 16px 0" class="">
+    <input type="file" id="nfo-file-input" accept=".nfo,.xml,.json" multiple onchange="handleNfoImport(event)" style="display:none">
+    <div class="setting-row">
+      <div><div class="setting-label">Filme manuell importieren</div><div class="setting-sub">Filmtitel eingeben (ein Titel pro Zeile)</div></div>
+      <button class="btn-outline" id="manual-import-toggle-btn" onclick="toggleManualImportPanel()">+ Öffnen</button>
+    </div>
+    <div id="manual-import-panel" style="display:none;padding:0 0 16px 0">
       <div class="search-bar" style="margin-bottom:8px;margin-top:8px">
         <input class="search-input" id="manual-import-input" placeholder="Filmtitel eingeben (ein Titel pro Zeile)...">
         <button class="btn-gold" onclick="manualImport()">IMPORTIEREN</button>
       </div>
       <div style="font-size:12px;color:var(--text3);margin-bottom:10px">Mehrere Titel durch Zeilenumbrüche trennen.</div>
-      <div class="import-results" id="import-results">
-        <div style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:2px;color:var(--gold);margin-bottom:14px">IMPORT-VORSCHAU</div>
-        <div id="import-items-list"></div>
-        <div style="margin-top:16px;display:flex;gap:10px">
-          <button class="btn-gold" onclick="confirmImport()">ALLE ARCHIVIEREN</button>
-          <button class="btn-outline" onclick="clearImport()">Abbrechen</button>
-        </div>
+    </div>
+    <div class="import-results" id="import-results" style="margin-bottom:8px">
+      <div style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:2px;color:var(--gold);margin-bottom:14px">IMPORT-VORSCHAU</div>
+      <div id="import-items-list"></div>
+      <div style="margin-top:16px;display:flex;gap:10px">
+        <button class="btn-gold" onclick="confirmImport()">ALLE ARCHIVIEREN</button>
+        <button class="btn-outline" onclick="clearImport()">Abbrechen</button>
       </div>
     </div>
     <div class="setting-row">

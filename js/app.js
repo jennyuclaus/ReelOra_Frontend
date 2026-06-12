@@ -837,6 +837,27 @@ function renderStats() {
 }
 
 // ─── DATEI-IMPORT ────────────────────────────────────────────
+async function handleNfoImport(event) {
+  const files = Array.from(event.target.files); if (!files.length) return;
+  importQueue = [];
+  for (const file of files) {
+    const text = await file.text();
+    const titleMatch = text.match(/<title>(.*?)<\/title>/i) || text.match(/"title"\s*:\s*"([^"]+)"/);
+    const yearMatch  = text.match(/<year>(\d{4})<\/year>/i) || text.match(/\((\d{4})\)/);
+    if (titleMatch) importQueue.push({title:(titleMatch[1]||'').trim(), year:yearMatch?yearMatch[1]:'', status:'wait', source:file.name});
+  }
+  if (!importQueue.length) { toast('Keine Filmtitel in den Dateien gefunden', 'warn'); return; }
+  // Panel öffnen und Vorschau zeigen
+  const panel = document.getElementById('manual-import-panel');
+  if (panel) panel.style.display = 'block';
+  const btn = document.getElementById('manual-import-toggle-btn');
+  if (btn) btn.textContent = '✕ Schließen';
+  document.getElementById('import-results').classList.add('visible');
+  renderImportQueue();
+  toast(`${importQueue.length} Titel aus ${files.length} Datei${files.length!==1?'en':''} gelesen`);
+  event.target.value = '';
+}
+
 async function manualImport() {
   const input = document.getElementById('manual-import-input').value.trim(); if (!input) return;
   importQueue = input.split('\n').map(t=>t.trim()).filter(Boolean).map(title=>({title,year:'',status:'wait',source:'manuell'}));
@@ -865,7 +886,7 @@ function clearImport() { importQueue=[]; document.getElementById('import-results
 
 function toggleManualImportPanel() {
   const panel = document.getElementById('manual-import-panel');
-  const btn   = document.querySelector('[onclick*="toggleManualImportPanel"]');
+  const btn   = document.getElementById('manual-import-toggle-btn');
   if (!panel) return;
   const open = panel.style.display !== 'none';
   panel.style.display = open ? 'none' : 'block';
