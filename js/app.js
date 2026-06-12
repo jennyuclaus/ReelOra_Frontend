@@ -279,9 +279,11 @@ function renderModalActions() {
                    (typeof seriesWatchlist !== 'undefined' && seriesWatchlist.some(s => s.tmdb_id === currentMovie?.id));
   const tmdbType = currentMovie?.media_type === 'tv' || isSeries ? 'tv' : 'movie';
   const tmdbUrl  = currentMovie?.id ? `https://www.themoviedb.org/${tmdbType}/${currentMovie.id}` : null;
+  const inWLEntry = watchlists.reduce((found, wl) => found || (wl.items.find(i => i.id === currentMovie?.id) ? wl : null), null);
   document.getElementById('modal-actions').innerHTML = `
     <button class="btn-gold" onclick="archiveCurrentMovie()">${isArchived?'✓ Archiviert':'+ Archivieren'}</button>
     <button class="btn-outline" onclick="addCurrentToWatchlist()">🔖 Watchlist</button>
+    ${inWLEntry ? `<button class="btn-outline" onclick="showMoveToListPicker(${currentMovie.id},'${esc(currentMovie.title)}',${inWLEntry.id})" style="border-color:var(--gold-dim);color:var(--gold)">↪ Verschieben</button>` : ''}
     ${isArchived ? `<button class="btn-outline" onclick="removeFromLibrary('${currentMovie.id}')" style="border-color:var(--red);color:var(--red)">🗑 Löschen</button>` : `<button class="btn-outline" style="opacity:0.35;pointer-events:none">🗑 Löschen</button>`}
     ${tmdbUrl ? `<a href="${tmdbUrl}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:8px;border:1px solid var(--border2);color:var(--text2);font-family:'Jost',sans-serif;font-size:13px;text-decoration:none;transition:all 0.2s" onmouseover="this.style.borderColor='var(--gold-dim)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">🌐 TMDB</a>` : ''}`;
 }
@@ -526,6 +528,95 @@ function addToList(id, title, posterPath, year, listId) {
 function addCurrentToWatchlist() {
   if (currentMovie) addToWatchlistById(currentMovie.id, currentMovie.title, currentMovie.poster_path||'', currentMovie.year||'');
 }
+
+// ─── VERSCHIEBEN ZWISCHEN FILM-WATCHLISTEN ───────────────────
+function showMoveToListPicker(itemId, itemTitle, fromListId) {
+  document.getElementById('move-list-picker-dialog')?.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'move-list-picker-dialog';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
+
+  const box = document.createElement('div');
+  box.style.cssText = 'background:#1a1a1a;border:1px solid rgba(201,168,76,0.3);border-radius:16px;padding:24px;width:100%;max-width:360px';
+
+  const heading = document.createElement('div');
+  heading.style.cssText = "font-family:'Cinzel',serif;font-size:13px;color:#C9A84C;letter-spacing:2px;margin-bottom:6px";
+  heading.textContent = 'VERSCHIEBEN NACH …';
+  box.appendChild(heading);
+
+  const sub = document.createElement('div');
+  sub.style.cssText = 'font-size:13px;color:#aaa;margin-bottom:14px';
+  sub.textContent = itemTitle;
+  box.appendChild(sub);
+
+  const list = document.createElement('div');
+  list.style.cssText = 'display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto';
+  box.appendChild(list);
+
+  // Archiv-Option
+  const archBtn = document.createElement('div');
+  archBtn.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.4);border-radius:10px;cursor:pointer';
+  archBtn.innerHTML = '<span style="font-size:20px">🎬</span><div><div style="font-weight:600;color:#C9A84C;font-size:14px">Ins Archiv verschieben</div><div style="font-size:11px;color:#aaa;margin-top:2px">Aus Watchlist entfernen & archivieren</div></div>';
+  archBtn.addEventListener('click', () => {
+    overlay.remove();
+    const fromWL = watchlists.find(w => w.id == fromListId);
+    const item = fromWL?.items.find(i => i.id === itemId);
+    if (fromWL) fromWL.items = fromWL.items.filter(i => i.id !== itemId);
+    quickArchive(itemId, itemTitle);
+    save(); renderWatchlists();
+  });
+  list.appendChild(archBtn);
+
+  // Andere Watchlisten
+  watchlists.filter(wl => wl.id != fromListId).forEach(wl => {
+    const btn = document.createElement('div');
+    btn.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#222;border:1px solid #333;border-radius:10px;cursor:pointer;color:#e0e0e0;font-size:14px';
+    btn.innerHTML = '<div style="display:flex;align-items:center;gap:8px"><span>🔖</span><span>' + esc(wl.name) + '</span></div><span style="font-size:12px;color:#888">' + wl.items.length + ' Filme</span>';
+    btn.addEventListener('click', () => {
+      overlay.remove();
+      const fromWL = watchlists.find(w => w.id == fromListId);
+      const item = fromWL?.items.find(i => i.id === itemId);
+      if (!item) return;
+      fromWL.items = fromWL.items.filter(i => i.id !== itemId);
+      wl.items.push(item);
+      save(); renderWatchlists();
+      toast('↪ \"' + itemTitle + '\" → ' + wl.name);
+    });
+    list.appendChild(btn);
+  });
+
+  // Serien-Watchlisten ebenfalls anbieten
+  if (typeof seriesNamedLists !== 'undefined') {
+    seriesNamedLists.forEach(wl => {
+      const btn = document.createElement('div');
+      btn.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#222;border:1px solid #333;border-radius:10px;cursor:pointer;color:#e0e0e0;font-size:14px';
+      btn.innerHTML = '<div style="display:flex;align-items:center;gap:8px"><span>📺</span><span>' + esc(wl.name) + '</span></div><span style="font-size:12px;color:#888">' + (wl.items||[]).length + ' Einträge</span>';
+      btn.addEventListener('click', () => {
+        overlay.remove();
+        const fromWL = watchlists.find(w => w.id == fromListId);
+        const item = fromWL?.items.find(i => i.id === itemId);
+        if (!item) return;
+        fromWL.items = fromWL.items.filter(i => i.id !== itemId);
+        if (!wl.items) wl.items = [];
+        wl.items.push({id: item.id, title: item.title, poster_path: item.poster_path||'', added: Date.now(), done: false});
+        save(); saveSeriesLists(); renderWatchlists();
+        toast('↪ \"' + itemTitle + '\" → ' + wl.name);
+      });
+      list.appendChild(btn);
+    });
+  }
+
+  const cancel = document.createElement('div');
+  cancel.style.cssText = 'margin-top:12px;text-align:center;padding:12px;border:1px solid #444;border-radius:8px;color:#888;font-size:13px;cursor:pointer';
+  cancel.textContent = 'Abbrechen';
+  cancel.addEventListener('click', () => overlay.remove());
+  box.appendChild(cancel);
+
+  overlay.appendChild(box);
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
 function toggleNewListForm() { document.getElementById('new-list-form').classList.toggle('open'); }
 function createNewListFromSettings() {
   const el = document.getElementById('new-list-name-settings');
@@ -602,6 +693,7 @@ function renderSeriesWatchlistCombined() {
             <div class="wl-poster">${item.poster_path?`<img src="${IMG_BASE}${item.poster_path}" loading="lazy">`:'📺'}</div>
             <div class="wl-info"><div class="wl-title">${esc(item.title)}</div></div>
             <button class="wl-check ${item.done?'done':''}" onclick="event.stopPropagation();toggleSeriesListItem('${wl.id}',${item.id})">${item.done?'✓':'○'}</button>
+            <button class="action-btn" title="Verschieben" onclick="event.stopPropagation();showMoveSeriesListPicker(${item.id},'${esc(item.title)}','${item.poster_path||''}','${wl.id}')" style="font-size:14px">↪</button>
             <button class="action-btn" onclick="event.stopPropagation();removeFromSeriesList('${wl.id}',${item.id})" style="color:var(--red)">✕</button>
           </div>`;
         }).join('')}
@@ -686,6 +778,7 @@ function renderWatchlists() {
               ${libEntry?.year||item.year ? `<div class="wl-meta">${libEntry?.year||item.year}</div>` : ''}
             </div>
             <button class="wl-check ${item.done?'done':''}" onclick="event.stopPropagation();toggleWLItem(${wl.id},${item.id})">${item.done?'✓':'○'}</button>
+            <button class="action-btn" title="Verschieben" onclick="event.stopPropagation();showMoveToListPicker(${item.id},'${esc(item.title)}',${wl.id})" style="font-size:14px">↪</button>
             <button class="action-btn" onclick="event.stopPropagation();removeFromWL(${wl.id},${item.id})" style="color:var(--red)">✕</button>
           </div>`;
         }).join('')}

@@ -363,9 +363,16 @@ function renderSeriesModalActions() {
   const statusLabels  = {watching:'Am Schauen',completed:'Abgeschlossen',paused:'Pausiert',planned:'Geplant'};
 
   const tmdbSeriesUrl = currentSeries?.id ? `https://www.themoviedb.org/tv/${currentSeries.id}` : null;
+  const inSeriesWL = seriesWatchlist.some(s => s.tmdb_id === currentSeries?.id);
+  const inNamedList = (typeof seriesNamedLists !== 'undefined') ? seriesNamedLists.reduce((found, wl) => found || (wl.items?.some(i => i.id === currentSeries?.id) ? wl : null), null) : null;
+  const inFilmWL = (typeof watchlists !== 'undefined') ? watchlists.reduce((found, wl) => found || (wl.items.some(i => i.id === currentSeries?.id) ? wl : null), null) : null;
+  const showMoveBtn = inSeriesWL || inNamedList || inFilmWL;
+  const moveFromId = inSeriesWL ? 'series-default' : (inNamedList ? inNamedList.id : (inFilmWL ? inFilmWL.id : null));
+  const posterSafe = (currentSeries?.poster_path||'').replace(/'/g,"\\'");
   document.getElementById('modal-actions').innerHTML = `
     <button class="btn-gold" onclick="quickAddSeries(${currentSeries?.id},'${esc(currentSeries?.title||currentSeries?.name||'')}','${currentSeries?.poster_path||''}')">${isArchived?'✓ Archiviert':'+ Archivieren'}</button>
     <button class="btn-outline" onclick="addSeriesToWatchlist(${currentSeries?.id},'${esc(currentSeries?.title||currentSeries?.name||'')}','${currentSeries?.poster_path||''}')">${inWL?'🔖 In Watchlist':'🔖 Watchlist'}</button>
+    ${showMoveBtn ? `<button class="btn-outline" onclick="${inFilmWL ? `showMoveToListPicker(${currentSeries?.id},'${esc(currentSeries?.title||currentSeries?.name||'')}',${moveFromId})` : `showMoveSeriesListPicker(${currentSeries?.id},'${esc(currentSeries?.title||currentSeries?.name||'')}','${posterSafe}','${moveFromId}')`}" style="border-color:var(--gold-dim);color:var(--gold)">↪ Verschieben</button>` : ''}
     ${isArchived ? `
       <select onchange="setSeriesStatus(${currentSeries.id},this.value)"
         style="padding:8px 12px;background:var(--bg4);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:'Jost',sans-serif;font-size:13px;outline:none;cursor:pointer">
@@ -596,6 +603,7 @@ function renderSeriesWatchlist() {
         <div class="lib-poster">${poster}</div>
         <div class="lib-info"><div class="lib-title">${esc(s.title)}</div></div>
         <button class="btn-outline" style="font-size:11px;padding:6px 12px" onclick="quickAddSeries(${s.tmdb_id},'${esc(s.title)}','${s.poster_path||''}')">+ Archivieren</button>
+        <button class="action-btn" title="Verschieben" onclick="showMoveSeriesListPicker(${s.tmdb_id},'${esc(s.title)}','${s.poster_path||''}','series-default')" style="font-size:14px">↪</button>
         <button class="action-btn" onclick="removeSeriesFromWL(${s.tmdb_id})" style="color:var(--red)">✕</button>
       </div>`;
   }).join('')}</div>`;
@@ -606,6 +614,111 @@ function removeSeriesFromWL(id) {
   saveSeries();
   renderSeriesWatchlist();
   toast('Aus Watchlist entfernt');
+}
+
+// ─── VERSCHIEBEN ZWISCHEN SERIEN-LISTEN ──────────────────────
+function showMoveSeriesListPicker(itemId, itemTitle, posterPath, fromListId) {
+  document.getElementById('move-series-picker-dialog')?.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'move-series-picker-dialog';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
+
+  const box = document.createElement('div');
+  box.style.cssText = 'background:#1a1a1a;border:1px solid rgba(201,168,76,0.3);border-radius:16px;padding:24px;width:100%;max-width:360px';
+
+  const heading = document.createElement('div');
+  heading.style.cssText = "font-family:'Cinzel',serif;font-size:13px;color:#C9A84C;letter-spacing:2px;margin-bottom:6px";
+  heading.textContent = 'VERSCHIEBEN NACH …';
+  box.appendChild(heading);
+
+  const sub = document.createElement('div');
+  sub.style.cssText = 'font-size:13px;color:#aaa;margin-bottom:14px';
+  sub.textContent = itemTitle;
+  box.appendChild(sub);
+
+  const list = document.createElement('div');
+  list.style.cssText = 'display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto';
+  box.appendChild(list);
+
+  // Ins Serien-Archiv verschieben
+  const archBtn = document.createElement('div');
+  archBtn.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.4);border-radius:10px;cursor:pointer';
+  archBtn.innerHTML = '<span style="font-size:20px">📺</span><div><div style="font-weight:600;color:#C9A84C;font-size:14px">Ins Archiv verschieben</div><div style="font-size:11px;color:#aaa;margin-top:2px">Aus Liste entfernen & archivieren</div></div>';
+  archBtn.addEventListener('click', () => {
+    overlay.remove();
+    removeFromSeriesList(fromListId, itemId);
+    quickAddSeries(itemId, itemTitle, posterPath);
+    renderSeriesWatchlistCombined();
+  });
+  list.appendChild(archBtn);
+
+  // In Serien-Eigene-Watchlist verschieben (falls nicht bereits dort)
+  if (fromListId !== 'series-default') {
+    const ownBtn = document.createElement('div');
+    ownBtn.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#222;border:1px solid #333;border-radius:10px;cursor:pointer;color:#e0e0e0;font-size:14px';
+    ownBtn.innerHTML = '<div style="display:flex;align-items:center;gap:8px"><span>📺</span><span>Serien-Watchlist</span></div><span style="font-size:12px;color:#888">' + seriesWatchlist.length + ' Serien</span>';
+    ownBtn.addEventListener('click', () => {
+      overlay.remove();
+      removeFromSeriesList(fromListId, itemId);
+      if (!seriesWatchlist.some(s => s.tmdb_id === itemId)) {
+        seriesWatchlist.push({tmdb_id: itemId, title: itemTitle, poster_path: posterPath, added: Date.now()});
+        saveSeries();
+      }
+      renderSeriesWatchlistCombined();
+      toast('↪ \"' + itemTitle + '\" → Serien-Watchlist');
+    });
+    list.appendChild(ownBtn);
+  }
+
+  // Andere benannte Serien-Listen
+  if (typeof seriesNamedLists !== 'undefined') {
+    seriesNamedLists.filter(wl => String(wl.id) !== String(fromListId)).forEach(wl => {
+      const btn = document.createElement('div');
+      btn.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#222;border:1px solid #333;border-radius:10px;cursor:pointer;color:#e0e0e0;font-size:14px';
+      btn.innerHTML = '<div style="display:flex;align-items:center;gap:8px"><span>📺</span><span>' + esc(wl.name) + '</span></div><span style="font-size:12px;color:#888">' + (wl.items||[]).length + ' Serien</span>';
+      btn.addEventListener('click', () => {
+        overlay.remove();
+        removeFromSeriesList(fromListId, itemId);
+        if (!wl.items) wl.items = [];
+        if (!wl.items.some(i => i.id === itemId)) {
+          wl.items.push({id: itemId, title: itemTitle, poster_path: posterPath, added: Date.now(), done: false});
+          saveSeriesLists();
+        }
+        renderSeriesWatchlistCombined();
+        toast('↪ \"' + itemTitle + '\" → ' + wl.name);
+      });
+      list.appendChild(btn);
+    });
+  }
+
+  // Film-Watchlisten anbieten
+  if (typeof watchlists !== 'undefined') {
+    watchlists.forEach(wl => {
+      const btn = document.createElement('div');
+      btn.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#222;border:1px solid #333;border-radius:10px;cursor:pointer;color:#e0e0e0;font-size:14px';
+      btn.innerHTML = '<div style="display:flex;align-items:center;gap:8px"><span>🎬</span><span>' + esc(wl.name) + '</span></div><span style="font-size:12px;color:#888">' + wl.items.length + ' Filme</span>';
+      btn.addEventListener('click', () => {
+        overlay.remove();
+        removeFromSeriesList(fromListId, itemId);
+        wl.items.push({id: itemId, title: itemTitle, added: Date.now(), done: false, poster_path: posterPath, year: '', rating: 0, type: 'series'});
+        if (typeof save === 'function') save();
+        renderSeriesWatchlistCombined();
+        toast('↪ \"' + itemTitle + '\" → ' + wl.name);
+      });
+      list.appendChild(btn);
+    });
+  }
+
+  const cancel = document.createElement('div');
+  cancel.style.cssText = 'margin-top:12px;text-align:center;padding:12px;border:1px solid #444;border-radius:8px;color:#888;font-size:13px;cursor:pointer';
+  cancel.textContent = 'Abbrechen';
+  cancel.addEventListener('click', () => overlay.remove());
+  box.appendChild(cancel);
+
+  overlay.appendChild(box);
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
 }
 
 // ─── FORTSCHRITT ──────────────────────────────────────────────
