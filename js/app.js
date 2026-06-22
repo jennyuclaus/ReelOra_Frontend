@@ -452,16 +452,15 @@ function showDeleteConfirm(title, subtitle, onConfirm) {
 
 // ─── WATCHLIST ───────────────────────────────────────────────
 function addToWatchlistById(id, title, posterPath='', year='') {
-  // Bereits archiviert?
-  if (library.some(l => l.tmdb_id === id)) { toast('"'+title+'" ist bereits im Archiv'); return; }
+  const isArchived = library.some(l => l.tmdb_id === id);
   // Bereits in einer Watchlist?
   const alreadyIn = watchlists.filter(wl => wl.items.some(i => i.id === id));
   if (alreadyIn.length) { toast('"'+title+'" ist bereits in: '+alreadyIn.map(w=>w.name).join(', ')); return; }
-  // Immer Picker zeigen (mit Archivieren-Option)
-  showWatchlistPicker(id, title, posterPath, year);
+  // Immer Picker zeigen (mit Archivieren-Option, falls noch nicht archiviert)
+  showWatchlistPicker(id, title, posterPath, year, isArchived);
 }
 
-function showWatchlistPicker(id, title, posterPath, year) {
+function showWatchlistPicker(id, title, posterPath, year, isArchived=false) {
   document.getElementById('watchlist-picker-dialog')?.remove();
 
   const overlay = document.createElement('div');
@@ -473,7 +472,7 @@ function showWatchlistPicker(id, title, posterPath, year) {
 
   const heading = document.createElement('div');
   heading.style.cssText = "font-family:'Cinzel',serif;font-size:13px;color:#C9A84C;letter-spacing:2px;margin-bottom:6px";
-  heading.textContent = 'WAS MÖCHTEST DU TUN?';
+  heading.textContent = isArchived ? 'ZU WELCHER WATCHLIST?' : 'WAS MÖCHTEST DU TUN?';
   box.appendChild(heading);
 
   const sub = document.createElement('div');
@@ -485,12 +484,14 @@ function showWatchlistPicker(id, title, posterPath, year) {
   list.style.cssText = 'display:flex;flex-direction:column;gap:8px';
   box.appendChild(list);
 
-  // Archivieren
-  const archBtn = document.createElement('div');
-  archBtn.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.4);border-radius:10px;cursor:pointer';
-  archBtn.innerHTML = '<span style="font-size:20px">🎬</span><div><div style="font-weight:600;color:#C9A84C;font-size:14px">Zu Mein Archiv</div><div style="font-size:11px;color:#aaa;margin-top:2px">Film direkt archivieren</div></div>';
-  archBtn.addEventListener('click', (e) => { e.stopPropagation(); overlay.remove(); quickArchive(id, title); });
-  list.appendChild(archBtn);
+  // Archivieren – nur anzeigen, wenn noch nicht archiviert
+  if (!isArchived) {
+    const archBtn = document.createElement('div');
+    archBtn.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.4);border-radius:10px;cursor:pointer';
+    archBtn.innerHTML = '<span style="font-size:20px">🎬</span><div><div style="font-weight:600;color:#C9A84C;font-size:14px">Zu Mein Archiv</div><div style="font-size:11px;color:#aaa;margin-top:2px">Film direkt archivieren</div></div>';
+    archBtn.addEventListener('click', (e) => { e.stopPropagation(); overlay.remove(); quickArchive(id, title); });
+    list.appendChild(archBtn);
+  }
 
   // Watchlisten
   watchlists.forEach(wl => {
