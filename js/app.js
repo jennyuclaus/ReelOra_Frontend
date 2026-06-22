@@ -290,7 +290,8 @@ function setRating(val) {
   document.querySelectorAll('#modal-stars .star-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.val) <= val));
   if (!currentMovie) return;
   const idx = library.findIndex(l => l.tmdb_id === currentMovie.id);
-  if (idx >= 0) { library[idx].rating = val; save(); } else archiveCurrentMovie(val);
+  if (idx >= 0) { library[idx].rating = val; save(); }
+  // Kein automatisches Archivieren bei Sternklick
 }
 
 function archiveCurrentMovie(forceRating = 0) {
