@@ -12,8 +12,10 @@ let watchlists = JSON.parse(localStorage.getItem('reelora_watchlists') || JSON.s
   { id:2, name:'Favoriten', items:[], created:Date.now() }
 ]));
 let settings = JSON.parse(localStorage.getItem('reelora_settings') || JSON.stringify({
-  tmdb_key:'', lang:'de-DE', drive_connected:false, drive_account:'', vercel_url:''
+  tmdb_key:'', lang:'de-DE', drive_connected:false, drive_account:'', vercel_url:'', show_adult:true
 }));
+// Rückwärtskompatibel: bestehende Settings ohne dieses Feld -> Standard ist "an"
+if (settings.show_adult === undefined) settings.show_adult = true;
 
 let currentMovie = null, libView = 'grid', libFilter = 'all';
 let importQueue = [], trendingCache = [], searchCache = [], toastTimer = null;
@@ -33,6 +35,8 @@ window.addEventListener('load', () => {
   }
   const lang = document.getElementById('lang-select');
   if (lang) lang.value = settings.lang || 'de-DE';
+  const adultToggle = document.getElementById('show-adult-toggle');
+  if (adultToggle) adultToggle.classList.toggle('on', settings.show_adult !== false);
   updateDriveUI();
   // Serien-Listen aus localStorage laden
   window.seriesNamedLists = JSON.parse(localStorage.getItem('reelora_series_lists') || '[]');
@@ -132,8 +136,12 @@ async function tmdbFetch(endpoint, params = '') {
   } catch (e) { toast('TMDB: ' + e.message, 'err'); return null; }
 }
 
+// FSK18/Über-18-Inhalte: standardmäßig eingeschaltet (siehe Einstellungen -> settings.show_adult),
+// bestehende Nutzer ohne dieses Feld werden in save.js oben schon auf "an" migriert.
+function adultParam() { return '&include_adult=' + (settings.show_adult !== false ? 'true' : 'false'); }
+
 async function renderTrending() {
-  const data = await tmdbFetch('/trending/movie/week');
+  const data = await tmdbFetch('/trending/movie/week', adultParam());
   if (!data) { renderSampleGrid('trending-grid'); return; }
   trendingCache = data.results.slice(0, 12); renderDiscoverGrid();
 }
@@ -205,7 +213,7 @@ async function searchMovies() {
   }
   document.getElementById('search-loading').classList.add('visible');
   document.getElementById('search-results-section').style.display = 'none';
-  const data = await tmdbFetch('/search/movie', `&query=${encodeURIComponent(q)}&include_adult=false`);
+  const data = await tmdbFetch('/search/movie', `&query=${encodeURIComponent(q)}${adultParam()}`);
   document.getElementById('search-loading').classList.remove('visible');
   if (!data?.results?.length) { toast('Keine Ergebnisse gefunden'); return; }
   searchCache = data.results.slice(0, 15); renderSearchResults();
@@ -226,7 +234,7 @@ const genreMap = {action:28,drama:18,scifi:878,thriller:53,horror:27,animation:1
 async function setFilter(f, btn) {
   document.querySelectorAll('#filter-row .filter-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active');
   if (f === 'all') { renderTrending(); return; }
-  const data = await tmdbFetch('/discover/movie', `&with_genres=${genreMap[f]}&sort_by=popularity.desc`);
+  const data = await tmdbFetch('/discover/movie', `&with_genres=${genreMap[f]}&sort_by=popularity.desc${adultParam()}`);
   if (data) { trendingCache = data.results.slice(0, 12); renderDiscoverGrid(); }
 }
 
@@ -894,6 +902,16 @@ function saveTMDBKey(val) { settings.tmdb_key=val.trim(); save(); document.getEl
 function saveLang(val) { settings.lang=val; save(); }
 function saveVercelUrl(val) { settings.vercel_url=val.trim().replace(/\/$/,''); save(); if(settings.vercel_url) checkDriveStatus(); }
 
+function toggleShowAdult(el) {
+  el.classList.toggle('on');
+  settings.show_adult = el.classList.contains('on');
+  save();
+  toast(settings.show_adult ? '✓ Erwachsene Inhalte eingeblendet' : 'Erwachsene Inhalte ausgeblendet');
+  // Aktuelle Trends neu laden, damit die Änderung sofort sichtbar wird
+  if (typeof renderTrending === 'function') renderTrending();
+  if (typeof renderTrendingSeries === 'function') renderTrendingSeries();
+}
+
 // ─── GOOGLE DRIVE ────────────────────────────────────────────
 function getApiBase() { return (settings.vercel_url||'').replace(/\/$/,''); }
 
@@ -1010,22 +1028,113 @@ async function driveSync() {
 
 async function manualSync() { if(!settings.drive_connected){toast('⚠ Nicht verbunden','warn');return;} await driveSync(); }
 
+async function manualBackup() {
+  const api=getApiBase(); if(!api||!settings.drive_connected){toast('⚠ Nicht verbunden','warn');return;}
+  try {
+    const res=await fetch(api+'/api/drive/backup',{method:'POST',headers:driveHeaders(),body:JSON.stringify({library,watchlists,seriesLibrary:(typeof seriesLibrary!=='undefined')?seriesLibrary:[],seriesWatchlist:(typeof seriesWatchlist!=='undefined')?seriesWatchlist:[]})});
+    if(!res.ok){const err=await res.json().catch(()=>({}));if(err.error==='NOT_AUTHENTICATED'){settings.drive_connected=false;save();updateDriveUI();toast('⚠ Drive: Bitte neu anmelden','warn');return;}throw new Error(err.error||res.status);}
+    const data=await res.json();
+    const now=new Date().toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    localStorage.setItem('reelora_last_backup', now);
+    const sub=document.getElementById('last-backup-sub'); if(sub) sub.textContent='Letztes Backup: '+now+' · '+data.kept+' von 5 aufbewahrt';
+    toast('💾 Backup erstellt → WebApps/ReelOra-Daten/Backup');
+  } catch(e) { toast('Backup Fehler: '+e.message,'err'); }
+}
+
+function formatBackupTimestamp(ts) {
+  // ts Format: 2026-08-31_16-30-00
+  const m = ts.match(/^(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})$/);
+  if (!m) return ts;
+  const [, y, mo, d, h, mi] = m;
+  return d+'.'+mo+'.'+y+' · '+h+':'+mi+' Uhr';
+}
+
+async function toggleBackupList() {
+  const panel = document.getElementById('backup-list-panel');
+  if (!panel) return;
+  const show = panel.style.display === 'none';
+  panel.style.display = show ? 'block' : 'none';
+  if (show) await loadBackupList();
+}
+
+async function loadBackupList() {
+  const api=getApiBase(); if(!api||!settings.drive_connected) return;
+  const content = document.getElementById('backup-list-content');
+  if (content) content.innerHTML = 'Lade Backups…';
+  try {
+    const res = await fetch(api+'/api/drive/backup', { headers: driveHeaders() });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (!data.backups?.length) { if (content) content.innerHTML = 'Noch keine Backups vorhanden.'; return; }
+    if (content) {
+      content.innerHTML = data.backups.map(b => {
+        const label = formatBackupTimestamp(b.timestamp);
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06)">'
+          + '<span>' + label + '</span>'
+          + '<button class="btn-outline" style="padding:4px 12px;font-size:12px" onclick="restoreBackup(\'' + b.timestamp + '\')">Wiederherstellen</button>'
+          + '</div>';
+      }).join('');
+    }
+  } catch (e) { if (content) content.innerHTML = 'Fehler beim Laden: ' + e.message; }
+}
+
+async function restoreBackup(timestamp) {
+  const api=getApiBase(); if(!api||!settings.drive_connected) return;
+  const label = formatBackupTimestamp(timestamp);
+  const ok = confirm(
+    'Backup vom ' + label + ' wiederherstellen?\n\n' +
+    'Deine aktuellen Filme, Serien und Watchlisten werden durch diesen Stand ERSETZT. ' +
+    'Das lässt sich nur über ein weiteres Backup rückgängig machen.'
+  );
+  if (!ok) return;
+  try {
+    const res = await fetch(api+'/api/drive/backup?timestamp='+encodeURIComponent(timestamp), { headers: driveHeaders() });
+    if (!res.ok) { const err = await res.json().catch(()=>({})); throw new Error(err.error || res.status); }
+    const data = await res.json();
+
+    library = data.library || [];
+    watchlists = data.watchlists || [];
+    localStorage.setItem('reelora_library', JSON.stringify(library));
+    localStorage.setItem('reelora_watchlists', JSON.stringify(watchlists));
+
+    if (typeof seriesLibrary !== 'undefined') {
+      seriesLibrary = data.seriesLibrary || [];
+      seriesWatchlist = data.seriesWatchlist || [];
+      localStorage.setItem('reelora_series', JSON.stringify(seriesLibrary));
+      localStorage.setItem('reelora_series_wl', JSON.stringify(seriesWatchlist));
+    }
+
+    // Wiederhergestellten Stand direkt auf Drive zurückschreiben, damit er der aktuelle ist
+    await driveSync();
+
+    renderLibrary(); renderWatchlists();
+    if (typeof renderStats === 'function') renderStats();
+    if (typeof renderRecentArchive === 'function') renderRecentArchive();
+
+    toast('✓ Backup vom ' + label + ' wiederhergestellt');
+    const panel = document.getElementById('backup-list-panel'); if (panel) panel.style.display = 'none';
+  } catch (e) { toast('Wiederherstellen fehlgeschlagen: ' + e.message, 'err'); }
+}
+
 function updateDriveUI() {
-  const badge=document.getElementById('drive-status-badge'),btn=document.getElementById('drive-connect-btn'),syncRow=document.getElementById('drive-sync-row'),manualRow=document.getElementById('drive-manual-row'),sub=document.getElementById('drive-account-sub');
+  const badge=document.getElementById('drive-status-badge'),btn=document.getElementById('drive-connect-btn'),syncRow=document.getElementById('drive-sync-row'),manualRow=document.getElementById('drive-manual-row'),backupRow=document.getElementById('drive-backup-row'),restoreRow=document.getElementById('drive-restore-row'),sub=document.getElementById('drive-account-sub');
   const logo=document.getElementById('user-avatar');
   if(!badge) return;
   if(settings.drive_connected){
     badge.className='drive-status connected'; badge.innerHTML='<div class="dot green"></div>Verbunden';
     btn.textContent='Trennen'; btn.onclick=disconnectDrive;
-    if(syncRow) syncRow.style.display='flex'; if(manualRow) manualRow.style.display='flex';
+    if(syncRow) syncRow.style.display='flex'; if(manualRow) manualRow.style.display='flex'; if(backupRow) backupRow.style.display='flex'; if(restoreRow) restoreRow.style.display='flex';
     if(sub) sub.textContent=settings.drive_account||'Verbunden';
+    const lastBackup=localStorage.getItem('reelora_last_backup');
+    const backupSub=document.getElementById('last-backup-sub'); if(backupSub && lastBackup) backupSub.textContent='Letztes Backup: '+lastBackup;
     // Logo: grüner Ring wenn verbunden
     if(logo) logo.style.outline='2px solid var(--green)';
     if(logo) logo.title='Drive verbunden: '+(settings.drive_account||'');
   } else {
     badge.className='drive-status disconnected'; badge.innerHTML='<div class="dot gray"></div>Nicht verbunden';
     btn.textContent='Mit Google anmelden'; btn.onclick=connectGoogleDrive;
-    if(syncRow) syncRow.style.display='none'; if(manualRow) manualRow.style.display='none';
+    if(syncRow) syncRow.style.display='none'; if(manualRow) manualRow.style.display='none'; if(backupRow) backupRow.style.display='none'; if(restoreRow) restoreRow.style.display='none';
+    const panel=document.getElementById('backup-list-panel'); if(panel) panel.style.display='none';
     if(sub) sub.textContent='Nicht verbunden';
     if(logo) logo.style.outline='none';
     if(logo) logo.title='Einstellungen';
@@ -1115,7 +1224,7 @@ async function doAutocomplete(q, type, input) {
   drop.innerHTML = '<div class="autocomplete-loading"><div class="spinner"></div> Suche...</div>';
 
   const endpoint = type === 'movie' ? '/search/movie' : '/search/tv';
-  const data = await tmdbFetch(endpoint, `&query=${encodeURIComponent(q)}&include_adult=false`);
+  const data = await tmdbFetch(endpoint, `&query=${encodeURIComponent(q)}${adultParam()}`);
 
   if (!data?.results?.length) {
     drop.innerHTML = '<div class="autocomplete-loading" style="color:var(--text3)">Keine Ergebnisse</div>';

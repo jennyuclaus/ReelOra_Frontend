@@ -59,7 +59,7 @@ function showSerienTab(tab, btn) {
 
 // ─── TRENDING SERIEN ─────────────────────────────────────────
 async function renderTrendingSeries() {
-  const data = await tmdbTVFetch('/trending/tv/week');
+  const data = await tmdbTVFetch('/trending/tv/week', adultParam());
   if (!data) { renderSampleSeriesGrid(); return; }
   trendingSeriesCache = data.results.slice(0, 12);
   renderTrendingSeriesGrid();
@@ -135,7 +135,7 @@ async function searchSeries() {
   const loading = document.getElementById('series-search-loading');
   if (loading) loading.classList.add('visible');
   document.getElementById('series-search-results-section').style.display = 'none';
-  const data = await tmdbTVFetch('/search/tv', `&query=${encodeURIComponent(q)}&include_adult=false`);
+  const data = await tmdbTVFetch('/search/tv', `&query=${encodeURIComponent(q)}${adultParam()}`);
   if (loading) loading.classList.remove('visible');
   if (!data?.results?.length) { toast('Keine Serien gefunden'); return; }
   seriesSearchCache = data.results.slice(0, 15);
@@ -163,7 +163,7 @@ async function setSeriesFilter(f, btn) {
   document.querySelectorAll('#series-filter-row .filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   if (f === 'all') { renderTrendingSeries(); return; }
-  const data = await tmdbTVFetch('/discover/tv', `&with_genres=${seriesGenreMap[f]}&sort_by=popularity.desc`);
+  const data = await tmdbTVFetch('/discover/tv', `&with_genres=${seriesGenreMap[f]}&sort_by=popularity.desc${adultParam()}`);
   if (data) {
     trendingSeriesCache = data.results.slice(0, 12);
     renderTrendingSeriesGrid();
