@@ -31,6 +31,15 @@ async function tmdbTVFetch(endpoint, params = '') {
 function saveSeries() {
   localStorage.setItem('reelora_series',   JSON.stringify(seriesLibrary));
   localStorage.setItem('reelora_series_wl',JSON.stringify(seriesWatchlist));
+  // Gleiche Dirty-Flag-Absicherung wie save() in app.js, damit Serien-Änderungen
+  // genauso vor einem überschreibenden Ladevorgang geschützt sind.
+  if (typeof settings !== 'undefined' && settings.drive_connected) {
+    settings.driveDirty = true;
+    localStorage.setItem('reelora_settings', JSON.stringify(settings));
+    if (settings.vercel_url && document.getElementById('auto-sync-toggle')?.classList.contains('on') && typeof driveSync === 'function') {
+      driveSync();
+    }
+  }
 }
 
 // ─── TABS ─────────────────────────────────────────────────────

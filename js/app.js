@@ -36,20 +36,11 @@ window.addEventListener('load', () => {
   updateDriveUI();
   // Serien-Listen aus localStorage laden
   window.seriesNamedLists = JSON.parse(localStorage.getItem('reelora_series_lists') || '[]');
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('drive_connected') === '1') {
-    const email = params.get('drive_email') || '';
-    const tokenData = params.get('drive_token') || '';
-    if (tokenData) {
-      try { localStorage.setItem('reelora_drive_token', JSON.stringify(JSON.parse(atob(decodeURIComponent(tokenData))))); }
-      catch (e) { console.error(e); }
-    }
-    settings.drive_connected = true; settings.drive_account = email; save();
-    history.replaceState({}, '', window.location.pathname);
-    toast('✓ Google Drive verbunden: ' + email); updateDriveUI(); loadFromDrive();
+  // Google-Login läuft jetzt per Popup (GSI) statt per Redirect – kein URL-Param-Handling mehr nötig.
+  if (settings.vercel_url && settings.drive_connected) {
+    checkDriveStatus();
+    if (getDriveToken()) loadFromDrive();
   }
-  if (params.get('drive_error')) { toast('Drive Fehler: ' + params.get('drive_error'), 'err'); history.replaceState({}, '', window.location.pathname); }
-  if (settings.vercel_url && settings.drive_connected) checkDriveStatus();
   // Start auf Filme → Entdecken
   showFilmeTab('entdecken', document.getElementById('ftab-entdecken'));
   renderLibrary(); renderWatchlists();
@@ -78,6 +69,9 @@ window.addEventListener('load', () => {
 function save() {
   localStorage.setItem('reelora_library',    JSON.stringify(library));
   localStorage.setItem('reelora_watchlists', JSON.stringify(watchlists));
+  // Dirty-Flag: solange eine lokale Änderung noch nicht bestätigt auf Drive
+  // liegt, darf ein späterer Ladevorgang sie nicht überschreiben (siehe loadFromDrive()).
+  if (settings.drive_connected) settings.driveDirty = true;
   localStorage.setItem('reelora_settings',   JSON.stringify(settings));
   if (settings.drive_connected && settings.vercel_url && document.getElementById('auto-sync-toggle')?.classList.contains('on')) driveSync();
 }
@@ -910,27 +904,50 @@ function getDriveToken() {
 
 function driveHeaders() { const t=getDriveToken(),h={'Content-Type':'application/json'}; if(t) h['Authorization']='Bearer '+t; return h; }
 
-function connectGoogleDrive() { const api=getApiBase(); if(!api){toast('⚠ Vercel URL fehlt','warn');return;} window.location.href=api+'/api/auth/login'; }
-
-async function disconnectDrive() {
-  try { await fetch(getApiBase()+'/api/auth/status',{method:'DELETE',credentials:'include'}); } catch(_){}
-  localStorage.removeItem('reelora_drive_token'); settings.drive_connected=false; settings.drive_account=''; save(); updateDriveUI(); toast('Google Drive getrennt');
+async function connectGoogleDrive() {
+  const api=getApiBase(); if(!api){toast('⚠ Vercel URL fehlt','warn');return;}
+  try {
+    const { email } = await driveLoginPopup();
+    settings.drive_connected = true; settings.drive_account = email; save();
+    toast('✓ Google Drive verbunden: ' + email);
+    updateDriveUI();
+    loadFromDrive();
+  } catch (e) {
+    toast('Drive Login Fehler: ' + e.message, 'err');
+  }
 }
 
-async function checkDriveStatus() {
-  const api=getApiBase(); if(!api) return;
-  try { const res=await fetch(api+'/api/auth/status',{credentials:'include',headers:driveHeaders()}),data=await res.json(); if(data.connected&&!data.expired){settings.drive_connected=true;settings.drive_account=data.email||'';save();updateDriveUI();return true;} } catch(_){}
-  return false;
+async function disconnectDrive() {
+  driveRevokeToken();
+  localStorage.removeItem('reelora_drive_token');
+  settings.drive_connected=false; settings.drive_account=''; settings.driveDirty=false; save(); updateDriveUI(); toast('Google Drive getrennt');
+}
+
+function checkDriveStatus() {
+  // Login läuft clientseitig – hier reicht ein lokaler Gültigkeits-Check.
+  const connected = !!getDriveToken();
+  settings.drive_connected = connected;
+  updateDriveUI();
+  return connected;
 }
 
 async function loadFromDrive() {
   const api=getApiBase(); if(!api||!settings.drive_connected) return;
+  if (settings.driveDirty) {
+    // Es liegen noch nicht bestätigte lokale Änderungen vor – erst hochladen,
+    // sonst würde ein Ladevorgang sie überschreiben.
+    await driveSync();
+    if (settings.driveDirty) {
+      toast('⚠ Ungesicherte Änderungen – Laden übersprungen, um Datenverlust zu vermeiden', 'warn');
+      return;
+    }
+  }
   try {
-    const res=await fetch(api+'/api/drive/sync',{credentials:'include',headers:driveHeaders()});
+    const res=await fetch(api+'/api/drive/sync',{headers:driveHeaders()});
     if(res.status===401){toast('⚠ Drive: Bitte neu anmelden','warn');settings.drive_connected=false;save();updateDriveUI();return;}
     if(!res.ok){toast('Drive Fehler: '+res.status,'err');return;}
     const data=await res.json();
-    if(!data.exists){toast('☁ Drive bereit – MeineApps/ReelOra angelegt');return;}
+    if(!data.exists){toast('☁ Drive bereit – WebApps/ReelOra-Daten angelegt');return;}
     // ── Filme: zusammenführen statt überschreiben ──
     if(data.library?.length) {
       const driveIds = new Set(data.library.map(f => f.tmdb_id));
@@ -970,19 +987,25 @@ async function loadFromDrive() {
     }
     save(); renderLibrary(); renderWatchlists(); renderStats(); renderRecentArchive();
     toast('☁ Geladen (Stand: '+(data.lastSync?new Date(data.lastSync).toLocaleString('de-DE'):'—')+')');
-    const sub=document.getElementById('drive-account-sub'); if(sub) sub.textContent=(settings.drive_account||'')+' · MeineApps/ReelOra';
+    const sub=document.getElementById('drive-account-sub'); if(sub) sub.textContent=(settings.drive_account||'')+' · WebApps/ReelOra-Daten';
   } catch(e) { toast('Drive Ladefehler: '+e.message,'err'); }
 }
 
 async function driveSync() {
   const api=getApiBase(); if(!api||!settings.drive_connected) return;
   try {
-    const res=await fetch(api+'/api/drive/sync',{method:'POST',credentials:'include',headers:driveHeaders(),body:JSON.stringify({library,watchlists,seriesLibrary:(typeof seriesLibrary!=='undefined')?seriesLibrary:[],seriesWatchlist:(typeof seriesWatchlist!=='undefined')?seriesWatchlist:[]})});
+    const res=await fetch(api+'/api/drive/sync',{method:'POST',headers:driveHeaders(),body:JSON.stringify({library,watchlists,seriesLibrary:(typeof seriesLibrary!=='undefined')?seriesLibrary:[],seriesWatchlist:(typeof seriesWatchlist!=='undefined')?seriesWatchlist:[]})});
     if(!res.ok){const err=await res.json().catch(()=>({}));if(err.error==='NOT_AUTHENTICATED'){settings.drive_connected=false;save();updateDriveUI();toast('⚠ Drive: Bitte neu anmelden','warn');return;}throw new Error(err.error||res.status);}
+    // Erfolgreich geschrieben -> Dirty-Flag löschen, damit der nächste Ladevorgang nicht blockiert wird
+    settings.driveDirty = false;
+    localStorage.setItem('reelora_settings', JSON.stringify(settings));
     const now=new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
     const sub=document.getElementById('last-sync-sub'); if(sub) sub.textContent='Zuletzt synchronisiert: '+now;
-    toast('☁ Synchronisiert → MeineApps/ReelOra');
-  } catch(e) { toast('Drive Sync Fehler: '+e.message,'err'); }
+    toast('☁ Synchronisiert → WebApps/ReelOra-Daten');
+  } catch(e) {
+    // Dirty-Flag bleibt gesetzt -> ein späterer Ladevorgang überschreibt die lokalen Änderungen nicht
+    toast('Drive Sync Fehler: '+e.message,'err');
+  }
 }
 
 async function manualSync() { if(!settings.drive_connected){toast('⚠ Nicht verbunden','warn');return;} await driveSync(); }
