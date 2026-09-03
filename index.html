@@ -26,11 +26,11 @@
     REELORA
   </div>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showFilmePage('entdecken',this)">Filme</button>
-    <button class="nav-tab" onclick="showPage('serien',this)">Serien</button>
-    <button class="nav-tab" onclick="showFilmePage('watchlist',this)">Watchlisten</button>
-    <button class="nav-tab" onclick="showFilmePage('statistiken',this)">Statistiken</button>
-    <button class="nav-tab" onclick="showPage('einstellungen',this)">Einstellungen</button>
+    <button class="nav-tab active" data-navkey="entdecken" onclick="showFilmePage('entdecken',this)">Filme</button>
+    <button class="nav-tab" data-navkey="serien" onclick="showPage('serien',this)">Serien</button>
+    <button class="nav-tab" data-navkey="watchlist" onclick="showFilmePage('watchlist',this)">Watchlisten</button>
+    <button class="nav-tab" data-navkey="statistiken" onclick="showFilmePage('statistiken',this)">Statistiken</button>
+    <button class="nav-tab" data-navkey="einstellungen" onclick="showPage('einstellungen',this)">Einstellungen</button>
   </div>
   <div class="topbar-right">
     <div id="drive-indicator" style="display:none"></div>
@@ -42,6 +42,15 @@
       id="user-avatar">
   </div>
 </div>
+
+<!-- BOTTOM-NAV: nur am Handy sichtbar, ersetzt die Top-Tabs für bessere Erreichbarkeit mit dem Daumen -->
+<nav class="bottom-nav">
+  <button class="nav-tab active" data-navkey="entdecken" onclick="showFilmePage('entdecken',this)"><span class="bn-icon">🎬</span><span class="bn-label">Filme</span></button>
+  <button class="nav-tab" data-navkey="serien" onclick="showPage('serien',this)"><span class="bn-icon">📺</span><span class="bn-label">Serien</span></button>
+  <button class="nav-tab" data-navkey="watchlist" onclick="showFilmePage('watchlist',this)"><span class="bn-icon">🔖</span><span class="bn-label">Watchlist</span></button>
+  <button class="nav-tab" data-navkey="statistiken" onclick="showFilmePage('statistiken',this)"><span class="bn-icon">📊</span><span class="bn-label">Statistik</span></button>
+  <button class="nav-tab" data-navkey="einstellungen" onclick="showPage('einstellungen',this)"><span class="bn-icon">⚙️</span><span class="bn-label">Mehr</span></button>
+</nav>
 
 
 

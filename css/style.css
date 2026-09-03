@@ -6,6 +6,39 @@
   --text:#F0EDE8;--text2:#A09880;--text3:#6A6050;
   --border:#2A2520;--border2:#3A3530;
   --red:#E05252;--green:#52C87A;--blue:#5299E0;
+  --bg-glass:rgba(10,10,10,0.97);       /* Sticky Header / Bottom-Nav (leicht transparent) */
+  --dropdown-bg:#0e0e0e;                 /* Autocomplete-Dropdown */
+  --subtle-tint:rgba(255,255,255,0.03);  /* dezente Badge-Flächen auf Seitenhintergrund */
+  --subtle-tint2:rgba(255,255,255,0.05); /* dezente Scrollbar-Bahn im Dropdown */
+}
+
+/* ===== LIGHT MODE ===== */
+/* Greift automatisch, wenn das Betriebssystem/der Browser helles Design eingestellt hat.
+   Alle Farben laufen über die obigen Variablen, deshalb reicht eine Überschreibung hier. */
+@media(prefers-color-scheme:light){
+  :root{
+    --gold:#87641A;--gold2:#A17F2E;--gold-dim:#7A6230;
+    --bg:#FAF8F4;--bg2:#FFFFFF;--bg3:#F0EDE4;--bg4:#E7E1D2;
+    --text:#1B1812;--text2:#6B6250;--text3:#948A76;
+    --border:#E2DCCC;--border2:#D0C8B4;
+    --bg-glass:rgba(255,255,255,0.92);
+    --dropdown-bg:#FFFFFF;
+    --subtle-tint:rgba(0,0,0,0.035);
+    --subtle-tint2:rgba(0,0,0,0.06);
+  }
+}
+
+/* ===== REDUZIERTE BEWEGUNG ===== */
+/* Alle Übergänge (Hover, Toast, Fortschrittsbalken, Toggle-Schalter, ...) werden praktisch
+   sofort statt animiert ausgeführt. Der Lade-Spinner nutzt "animation" statt "transition"
+   und bleibt davon unberührt, da er echtes Feedback gibt ("es lädt gerade") und kein rein
+   dekorativer Effekt ist. */
+@media(prefers-reduced-motion:reduce){
+  *, *::before, *::after{
+    transition-duration:0.01ms !important;
+    transition-delay:0ms !important;
+  }
+  html{scroll-behavior:auto !important;}
 }
 body{
   font-family:'Jost',sans-serif;
@@ -19,7 +52,7 @@ body{
 .topbar{
   display:flex;align-items:center;justify-content:space-between;
   padding:16px 24px;border-bottom:1px solid var(--border);
-  background:rgba(10,10,10,0.97);position:sticky;top:0;z-index:100;
+  background:var(--bg-glass);position:sticky;top:0;z-index:100;
 }
 .logo{
   font-family:'Cinzel',serif;font-size:22px;font-weight:700;
@@ -260,7 +293,7 @@ select{
 .toggle.on::after{left:22px;}
 .drive-status{display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:8px;font-size:13px;}
 .drive-status.connected{background:rgba(82,200,122,0.1);border:1px solid rgba(82,200,122,0.2);color:var(--green);}
-.drive-status.disconnected{background:rgba(255,255,255,0.03);border:1px solid var(--border);color:var(--text2);}
+.drive-status.disconnected{background:var(--subtle-tint);border:1px solid var(--border);color:var(--text2);}
 .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
 .dot.green{background:var(--green);}
 .dot.gray{background:var(--text3);}
@@ -323,20 +356,55 @@ select{
   }
   .logo{font-size:16px;letter-spacing:2px;flex-shrink:0;}
   .logo span{display:none;} /* Text verstecken, nur Icon */
-  .nav-tabs{
-    flex:1;
-    display:flex;
-    flex-wrap:wrap;
-    gap:2px;
-    justify-content:center;
-    margin:0 8px;
-  }
-  .nav-tab{font-size:10px;padding:5px 8px;letter-spacing:0.5px;}
-  .topbar-right{flex-shrink:0;margin-left:4px;}
+  .nav-tabs{display:none;} /* Top-Tabs weichen der Bottom-Nav am Handy */
+  .topbar-right{flex-shrink:0;margin-left:auto;}
   .two-col{grid-template-columns:1fr;}
   .stats-grid{grid-template-columns:repeat(2,1fr);}
   .setting-input{width:150px;}
-  .page{padding:16px;}
+  .page{padding:16px 16px calc(84px + env(safe-area-inset-bottom));} /* Platz für fixe Bottom-Nav */
+  .icon-btn{width:40px;height:40px;} /* größere Tipp-Fläche am Handy */
+  .toast{bottom:calc(76px + env(safe-area-inset-bottom));right:16px;left:16px;} /* über der Bottom-Nav */
+}
+
+/* Bottom-Nav: eigene fixe Leiste am unteren Rand, nur am Handy sichtbar (siehe oben) */
+.bottom-nav{
+  display:none;
+}
+@media(max-width:768px){
+  .bottom-nav{
+    display:flex;
+    position:fixed;left:0;right:0;bottom:0;
+    background:var(--bg-glass);
+    border-top:1px solid var(--border);
+    padding:4px 4px env(safe-area-inset-bottom);
+    z-index:150;
+  }
+  .bottom-nav .nav-tab{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:2px;min-height:52px;padding:6px 2px;
+    background:transparent;border:none;border-radius:10px;
+    color:var(--text2);font-family:'Jost',sans-serif;font-size:10px;letter-spacing:0.3px;
+    text-transform:none;cursor:pointer;transition:all 0.2s;
+  }
+  .bottom-nav .nav-tab .bn-icon{font-size:19px;line-height:1;}
+  .bottom-nav .nav-tab.active{color:var(--gold);background:rgba(201,168,76,0.1);}
+}
+
+/* Sehr schmale Handys (z.B. iPhone SE): Bottom-Nav-Labels minimal verkleinern statt umbrechen */
+@media(max-width:360px){
+  .bottom-nav .nav-tab{font-size:9px;}
+  .bottom-nav .nav-tab .bn-icon{font-size:17px;}
+}
+
+/* Größere Bildschirme: mehr, etwas größere Kacheln statt vieler winziger Spalten */
+@media(min-width:1400px){
+  .movie-grid{grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:20px;}
+}
+
+/* Tastatur-Bedienung am PC: sichtbarer Fokusring statt unsichtbarem Standard-Outline */
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, .nav-tab:focus-visible, .icon-btn:focus-visible{
+  outline:2px solid var(--gold);
+  outline-offset:2px;
 }
 
 /* ===== LÖSCH-MODUS ===== */
@@ -459,7 +527,7 @@ select{
 
 /* ===== AUTOCOMPLETE ===== */
 .autocomplete-dropdown {
-  background:#0e0e0e !important;
+  background:var(--dropdown-bg) !important;
   border:1px solid rgba(201,168,76,0.4);
   border-top:2px solid rgba(201,168,76,0.2);
   border-radius:0 0 14px 14px;
@@ -471,7 +539,7 @@ select{
   pointer-events:all;
 }
 .autocomplete-dropdown::-webkit-scrollbar{width:6px;}
-.autocomplete-dropdown::-webkit-scrollbar-track{background:rgba(255,255,255,0.05);}
+.autocomplete-dropdown::-webkit-scrollbar-track{background:var(--subtle-tint2);}
 .autocomplete-dropdown::-webkit-scrollbar-thumb{background:rgba(201,168,76,0.4);border-radius:3px;}
 .autocomplete-item {
   display:flex;align-items:center;gap:12px;

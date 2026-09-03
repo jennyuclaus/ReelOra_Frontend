@@ -80,9 +80,15 @@ function save() {
   if (settings.drive_connected && settings.vercel_url && document.getElementById('auto-sync-toggle')?.classList.contains('on')) driveSync();
 }
 
+// Markiert in Top-Nav UND Bottom-Nav gleichzeitig den passenden Tab als aktiv
+// (beide Navigationen tragen die gleichen data-navkey-Werte, so bleiben Handy- und PC-Ansicht synchron)
+function setActiveNavTab(key) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll(`.nav-tab[data-navkey="${key}"]`).forEach(t => t.classList.add('active'));
+}
+
 function showPage(name, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   // Serien, Import, Einstellungen haben eigene Seiten
   const ownPage = document.getElementById('page-' + name);
   if (ownPage) {
@@ -91,22 +97,21 @@ function showPage(name, btn) {
     // Fallback: bibliothek
     document.getElementById('page-bibliothek').classList.add('active');
   }
-  if (btn) btn.classList.add('active');
+  setActiveNavTab(name);
   if (name === 'serien' && typeof initSerienPage === 'function') initSerienPage();
 }
 
 // Filme-Seite mit Sub-Tab anzeigen
 function showFilmePage(tab, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   if (tab === 'statistiken') {
     document.getElementById('page-statistiken')?.classList.add('active');
-    if (btn) btn.classList.add('active');
+    setActiveNavTab(tab);
     renderStats();
     return;
   }
   document.getElementById('page-bibliothek').classList.add('active');
-  if (btn) btn.classList.add('active');
+  setActiveNavTab(tab);
   showFilmeTab(tab, document.getElementById('ftab-' + tab));
 }
 
