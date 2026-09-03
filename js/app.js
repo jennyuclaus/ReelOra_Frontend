@@ -9,7 +9,7 @@ const BACKDROP_BASE = 'https://image.tmdb.org/t/p/w780';
 let library    = JSON.parse(localStorage.getItem('reelora_library')    || '[]');
 let watchlists = JSON.parse(localStorage.getItem('reelora_watchlists') || JSON.stringify([
   { id:1, name:'Watchlist', items:[], created:Date.now() },
-  { id:2, name:'Favoriten', items:[], created:Date.now() }
+  { id:2, name:'Mit Wuschel', items:[], created:Date.now() }
 ]));
 let settings = JSON.parse(localStorage.getItem('reelora_settings') || JSON.stringify({
   tmdb_key:'', lang:'de-DE', drive_connected:false, drive_account:'', vercel_url:'', show_adult:true
@@ -39,7 +39,9 @@ window.addEventListener('load', () => {
   if (adultToggle) adultToggle.classList.toggle('on', settings.show_adult !== false);
   updateDriveUI();
   // Serien-Listen aus localStorage laden
-  window.seriesNamedLists = JSON.parse(localStorage.getItem('reelora_series_lists') || '[]');
+  window.seriesNamedLists = JSON.parse(localStorage.getItem('reelora_series_lists') || JSON.stringify([
+    { id:1, name:'Mit Wuschel', items:[], created:Date.now() }
+  ]));
   // Google-Login läuft jetzt per Popup (GSI) statt per Redirect – kein URL-Param-Handling mehr nötig.
   if (settings.vercel_url && settings.drive_connected) {
     checkDriveStatus();
@@ -671,7 +673,7 @@ function saveSeriesLists() {
 
 // Serien-Watchlist (flach) + benannte Serien-Listen kombiniert rendern
 function renderSeriesWatchlistCombined() {
-  if (typeof seriesNamedLists === 'undefined') window.seriesNamedLists = JSON.parse(localStorage.getItem('reelora_series_lists') || '[]');
+  if (typeof seriesNamedLists === 'undefined') window.seriesNamedLists = JSON.parse(localStorage.getItem('reelora_series_lists') || JSON.stringify([{ id:1, name:'Mit Wuschel', items:[], created:Date.now() }]));
   const c = document.getElementById('series-watchlist-combined-container');
   if (!c) return;
 
@@ -1161,7 +1163,7 @@ function importBackup(event) {
 
 function clearAll() {
   if(!confirm('Wirklich alle Daten löschen?')) return;
-  library=[]; watchlists=[{id:1,name:'Watchlist',items:[],created:Date.now()},{id:2,name:'Favoriten',items:[],created:Date.now()}];
+  library=[]; watchlists=[{id:1,name:'Watchlist',items:[],created:Date.now()},{id:2,name:'Mit Wuschel',items:[],created:Date.now()}];
   save(); renderLibrary(); renderWatchlists(); renderStats(); renderRecentArchive(); toast('Alle Daten gelöscht');
 }
 
